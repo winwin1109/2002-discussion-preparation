@@ -1,0 +1,3341 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>小組討論審題四步曲 — 選擇慶祝活動</title>
+    <style>
+        /* [保留原有的全域設計與鮮豔色彩，並強化手機與電腦跨裝置體驗] */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #A1C4FD 0%, #C2E9FB 100%);
+            padding: 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        button, select, .mole-hole-slot, .falling-answer-bubble, .tank-base-target, .shooting-target {
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(74, 20, 140, 0.20);
+            padding: 30px 35px 40px;
+            border: 2px solid #00BCD4;
+            position: relative;
+        }
+        h1 {
+            font-size: 28px;
+            color: #4A148C;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 12px;
+            border-bottom: 3px solid #E1BEE7;
+            padding-bottom: 18px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        h1 small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #7E57C2;
+            background: #F3E5F5;
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: 1px solid #CE93D8;
+        }
+
+        /* 頂部累積總分與音效控制列 */
+        .global-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, #4A148C, #7B1FA2);
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 20px;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 20px rgba(74, 20, 140, 0.25);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .hud-scores {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .hud-total {
+            font-size: 20px;
+            font-weight: 800;
+            color: #FFD600;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: 2px solid #FFD600;
+        }
+        .hud-detail {
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .hud-rule {
+            font-size: 13px;
+            color: #E1BEE7;
+            font-weight: 600;
+        }
+        .sound-toggle {
+            background: #FFD600;
+            color: #212121;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .sound-toggle:hover { transform: scale(1.05); }
+        .sound-toggle.muted { background: #B0BEC5; color: #37474F; }
+
+        /* 浮動加減分提示特效 */
+        .score-float {
+            position: fixed;
+            z-index: 10000;
+            font-weight: 900;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUpFade 1s ease-out forwards;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .score-float.plus { color: #00E676; }
+        .score-float.minus { color: #FF1744; }
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translateY(0) scale(0.9); }
+            50% { opacity: 1; transform: translateY(-25px) scale(1.15); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1); }
+        }
+
+        /* 返回上一關與重做按鈕樣式 */
+        .top-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .back-btn {
+            background: #F5F5F5;
+            border: 2px solid #B0BEC5;
+            color: #455A64;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            background: #E0E0E0;
+            color: #212121;
+            border-color: #90A4AE;
+            transform: translateY(-2px);
+        }
+        .retry-btn {
+            background: #FFF8E1;
+            border: 2px solid #FFB300;
+            color: #E65100;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .retry-btn:hover {
+            background: #FFECB3;
+            transform: translateY(-2px);
+        }
+
+        .step-indicator { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .step-btn {
+            padding: 10px 18px; border: 2px solid #FFF176; background: #FFF9C4;
+            border-radius: 50px; font-weight: 600; font-size: 15px; color: #D32F2F;
+            cursor: pointer; transition: 0.2s; flex: 1 1 180px; text-align: center;
+        }
+        .step-btn.active { background: #FFD600; border-color: #FFD600; color: white; box-shadow: 0 4px 12px rgba(255, 214, 0, 0.4); }
+        .step-btn.done { border-color: #2E7D32; color: #1B5E20; background: #C8E6C9; }
+        .step-btn:hover:not(.active) { background: #FFFDE7; }
+
+        .question-panel {
+            background: #FAFAFA; border-radius: 20px; padding: 20px 24px;
+            margin-bottom: 30px; border: 2px solid #B0BEC5; box-shadow: inset 0 0 0 1px #E0E0E0;
+        }
+        .question-panel h2 { font-size: 20px; color: #01579B; margin-bottom: 8px; }
+        .question-panel .scenario {
+            background: #F5F5F5; padding: 14px 18px; border-radius: 12px;
+            margin: 12px 0; border-left: 6px solid #FBC02D; font-size: 15px; line-height: 1.7; color: #424242;
+        }
+        .question-panel .task-list { margin: 12px 0 16px 0; padding-left: 22px; font-size: 15px; line-height: 1.8; color: #212121; }
+        
+        .ref-table { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 12px 0 0 0; font-size: 14px; }
+        .ref-table table { width: 100%; min-width: 520px; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); }
+        .ref-table th { background: #01579B; color: white; padding: 10px 12px; text-align: center; font-weight: 700; }
+        .ref-table th img { max-width: 100%; height: auto; max-height: 110px; border-radius: 8px; margin-top: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); object-fit: cover; }
+        .ref-table td { border: 1px solid #CFD8DC; padding: 10px 12px; vertical-align: top; background: #FAFAFA; }
+        .ref-table .label { background: #B2EBF2; font-weight: 700; color: #00796B; white-space: nowrap; }
+        .ref-table ul { margin: 0; padding-left: 18px; }
+
+        .step-panel { display: none; animation: fadeUp 0.3s ease; }
+        .step-panel.active { display: block; }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-size: 18px; font-weight: 700; color: #D32F2F; margin-bottom: 18px; border-bottom: 2px dashed #EF9A9A; padding-bottom: 8px; }
+
+        /* 第一關互動特效 CSS */
+        .progress-container { width: 100%; height: 12px; background: #E0E0E0; border-radius: 10px; margin-bottom: 20px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #FFD600, #FBC02D); width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .shake-anim { animation: shake 0.4s ease; border-color: #C62828 !important; }
+        .pop-anim { animation: pop 0.4s ease; border-color: #2E7D32 !important; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2); }
+
+        .judge-item {
+            display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: #FAFAFA;
+            padding: 16px 20px; border-radius: 16px; border: 2px solid #EF9A9A; margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+        .judge-item .text { flex: 1; font-weight: 600; min-width: 160px; color: #424242; font-size: 16px; }
+        .judge-item .btns { display: flex; gap: 10px; }
+        .judge-item .btns button {
+            padding: 8px 26px; border-radius: 30px; border: 2px solid #FFF176; background: white;
+            font-weight: 700; cursor: pointer; transition: 0.2s; color: #D32F2F; font-size: 15px;
+        }
+        .judge-item .btns button:hover:not(:disabled) { background: #FFFDE7; transform: translateY(-2px); }
+        .judge-item .btns button.correct { border-color: #2E7D32; background: #C8E6C9; color: #1B5E20; cursor: default; transform: none; }
+        .judge-item .btns button.wrong { border-color: #C62828; background: #FFEBEE; color: #B71C1C; cursor: default; transform: none; }
+        .judge-item .btns button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .explanation {
+            width: 100%; margin-top: 10px; padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 500;
+            display: none; animation: fadeUp 0.3s ease;
+        }
+        .explanation.show { display: block; }
+        .explanation.correct-exp { background: #E8F5E9; color: #1B5E20; border-left: 5px solid #2E7D32; }
+        .explanation.wrong-exp { background: #FFEBEE; color: #B71C1C; border-left: 5px solid #C62828; }
+
+        /* ================= 第二關：三個趣味小遊戲切換導航 ================= */
+        .minigame-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .mg-tab {
+            flex: 1 1 200px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 3px solid #B0BEC5;
+            background: #ECEFF1;
+            color: #455A64;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.25s;
+            text-align: center;
+        }
+        .mg-tab.active {
+            border-color: #FF6F00;
+            background: linear-gradient(135deg, #FFD54F, #FFB300);
+            color: #212121;
+            box-shadow: 0 6px 15px rgba(255, 179, 0, 0.35);
+            transform: translateY(-2px);
+        }
+        .mg-tab.done {
+            border-color: #2E7D32;
+            background: #C8E6C9;
+            color: #1B5E20;
+        }
+        .mg-panel { display: none; }
+        .mg-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+        /* 跨裝置等比例畫布縮放外框 (確保手機與電腦座標100%一致且不超出畫面) */
+        .responsive-canvas-viewport {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        /* -------- 遊戲一：紅白機坦克迷宮大戰 (FC Battle City Maze Style) -------- */
+        .tank-arcade {
+            background: #000000;
+            border: 6px solid #B71C1C;
+            border-radius: 20px;
+            padding: 18px;
+            color: #FFFFFF;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7), inset 0 0 0 4px #FFB300;
+            font-family: 'Courier New', Courier, monospace, 'Microsoft JhengHei';
+        }
+        .tank-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px dashed #B71C1C;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tank-badge {
+            background: #D32F2F;
+            color: #FFD600;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            border: 2px solid #FFD600;
+            font-size: 14px;
+        }
+        .tank-mission-box {
+            background: #1A1A1A;
+            border: 3px solid #D84315;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .tank-phase-tag {
+            display: inline-block;
+            background: #FFD600;
+            color: #000;
+            font-weight: 900;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .tank-question-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: #FFF;
+            line-height: 1.5;
+        }
+        .tank-stage-wrap {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        #tankViewport {
+            max-width: 560px;
+            height: 350px;
+        }
+        .tank-map {
+            position: relative;
+            width: 560px;
+            height: 350px;
+            background-color: #050505;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 28px 28px;
+            border: 5px solid #9E9E9E;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.95);
+            transform-origin: top left;
+        }
+        /* 實體紅磚牆障礙物 */
+        .brick-wall {
+            position: absolute;
+            background-color: #B71C1C;
+            background-image:
+                linear-gradient(335deg, #BF360C 23px, transparent 23px),
+                linear-gradient(155deg, #D84315 23px, transparent 23px),
+                linear-gradient(335deg, #BF360C 23px, transparent 23px),
+                linear-gradient(155deg, #D84315 23px, transparent 23px);
+            background-size: 28px 28px;
+            background-position: 0px 1px, 2px 14px, 14px 15px, 16px 1px;
+            border: 2px solid #FF8A65;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.8), inset 0 0 6px rgba(0,0,0,0.6);
+            z-index: 4;
+        }
+        .brick-wall.wall-hit-flash {
+            filter: brightness(1.8);
+        }
+        /* 戰場中的答案基地目標 */
+        .tank-base-target {
+            position: absolute;
+            background: linear-gradient(180deg, #263238, #11171A);
+            border: 3px solid #FFD600;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #FFF;
+            font-weight: 900;
+            font-size: 14px;
+            text-align: center;
+            padding: 4px 6px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            z-index: 3;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        }
+        .tank-base-target .base-icon { font-size: 18px; line-height: 1.1; }
+        .tank-base-target.hit-ok {
+            background: #1B5E20 !important;
+            border-color: #00E676 !important;
+            box-shadow: 0 0 25px #00E676 !important;
+            transform: scale(1.12);
+        }
+        .tank-base-target.hit-bad {
+            background: #B71C1C !important;
+            border-color: #FF1744 !important;
+            animation: shake 0.4s ease;
+        }
+
+        /* 玩家像素裝甲坦克（可四向旋轉） */
+        .player-tank {
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            z-index: 6;
+            transition: transform 0.08s ease;
+            pointer-events: none;
+        }
+        .tank-body-chassis {
+            width: 100%;
+            height: 100%;
+            background: #FFB300;
+            border: 3px solid #FFF8E1;
+            border-radius: 6px;
+            position: relative;
+            box-shadow: 0 0 12px rgba(255, 179, 0, 0.85), inset 0 0 6px #E65100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tank-body-chassis::before,
+        .tank-body-chassis::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            bottom: -2px;
+            width: 7px;
+            background: repeating-linear-gradient(0deg, #424242 0px, #424242 4px, #9E9E9E 4px, #9E9E9E 7px);
+            border: 1px solid #212121;
+            border-radius: 2px;
+        }
+        .tank-body-chassis::before { left: -4px; }
+        .tank-body-chassis::after { right: -4px; }
+        .tank-turret-cap {
+            width: 18px;
+            height: 18px;
+            background: #FF6F00;
+            border: 2px solid #FFF;
+            border-radius: 4px;
+            position: relative;
+        }
+        .tank-barrel {
+            position: absolute;
+            width: 6px;
+            height: 16px;
+            background: #FFD54F;
+            border: 1.5px solid #FFF;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .tank-bullet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #FFF;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #FFD600, 0 0 4px #FF3D00;
+            z-index: 8;
+        }
+
+        .fc-controller {
+            background: #7F0000;
+            border: 4px solid #FFD600;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-width: 210px;
+            flex: 0 0 auto;
+        }
+        .fc-controller-title {
+            color: #FFD600;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .dpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 52px);
+            grid-template-rows: repeat(3, 52px);
+            gap: 5px;
+        }
+        .dpad-btn {
+            background: #212121;
+            border: 2px solid #616161;
+            color: #FFF;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #000;
+            transition: 0.08s;
+        }
+        .dpad-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #000;
+            background: #424242;
+        }
+        .dpad-center {
+            background: #1A1A1A;
+            border-radius: 50%;
+            border: 2px solid #424242;
+        }
+        .fire-btn {
+            width: 100%;
+            padding: 12px 18px;
+            background: linear-gradient(180deg, #FF5252, #D50000);
+            border: 3px solid #FFF;
+            border-radius: 30px;
+            color: #FFF;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #7F0000;
+            transition: 0.1s;
+        }
+        .fire-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #7F0000;
+        }
+
+        /* -------- 遊戲二：街機《泡泡龍》掉落泡泡動態版 (參考 images.jpg) -------- */
+        .pb-cabinet {
+            background: #101626;
+            border: 6px solid #283593;
+            border-radius: 26px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        .pb-marquee {
+            background: linear-gradient(180deg, #1E2952 0%, #0F172A 100%);
+            border-bottom: 5px solid #000;
+            padding: 12px 16px;
+            text-align: center;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(255, 255, 0, 0.25);
+        }
+        .pb-marquee-title {
+            font-family: 'Arial Black', Impact, sans-serif;
+            font-style: italic;
+            font-size: 22px;
+            color: #E6FF00;
+            text-shadow: 0 3px 0 #000, 0 0 12px rgba(230, 255, 0, 0.7);
+            letter-spacing: 1.5px;
+        }
+        .pb-marquee-sub {
+            color: #FFF;
+            font-weight: 800;
+            font-size: 13px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        .pb-question-banner {
+            background: #FFF9C4;
+            color: #4A148C;
+            border-bottom: 4px solid #FFD600;
+            padding: 12px 16px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 900;
+            line-height: 1.5;
+        }
+        .pb-screen {
+            position: relative;
+            padding: 14px;
+            background-color: #8E9E82;
+            background-image:
+                linear-gradient(45deg, #D178B9 25%, transparent 25%),
+                linear-gradient(-45deg, #D178B9 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #D178B9 75%),
+                linear-gradient(-45deg, transparent 75%, #D178B9 75%);
+            background-size: 72px 72px;
+            background-position: 0 0, 0 36px, 36px -36px, -36px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .pb-hud-bar {
+            width: 100%;
+            max-width: 550px;
+            display: flex;
+            justify-content: space-between;
+            color: #00E676;
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            font-size: 15px;
+            text-shadow: 2px 2px 0 #000;
+            margin-bottom: 6px;
+        }
+        #pbViewport {
+            max-width: 550px;
+            height: 360px;
+        }
+        .pb-playfield {
+            position: relative;
+            width: 550px;
+            height: 360px;
+            background:
+                linear-gradient(45deg, rgba(74, 53, 86, 0.94) 25%, rgba(92, 68, 107, 0.94) 25%, rgba(92, 68, 107, 0.94) 50%, rgba(74, 53, 86, 0.94) 50%, rgba(74, 53, 86, 0.94) 75%, rgba(92, 68, 107, 0.94) 75%);
+            background-size: 56px 56px;
+            border-left: 10px ridge #FFD54F;
+            border-right: 10px ridge #FFD54F;
+            border-top: 10px ridge #FFD54F;
+            border-bottom: 6px solid #B0BEC5;
+            box-shadow: 0 0 25px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,0,0,0.6);
+            overflow: hidden;
+            transform-origin: top left;
+        }
+        /* 裝飾小泡泡球 */
+        .b-red { background: radial-gradient(circle at 35% 35%, #FF8A80, #D50000 75%); }
+        .b-yel { background: radial-gradient(circle at 35% 35%, #FFFF8D, #FFAB00 75%); }
+        .b-grn { background: radial-gradient(circle at 35% 35%, #B9F6CA, #00C853 75%); }
+        .b-blu { background: radial-gradient(circle at 35% 35%, #82B1FF, #2962FF 75%); }
+        .b-pur { background: radial-gradient(circle at 35% 35%, #EA80FC, #AA00FF 75%); }
+
+        /* 飄落中的答案泡泡 */
+        .falling-answer-bubble {
+            position: absolute;
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            color: #FFF;
+            font-weight: 900;
+            font-size: 13px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.85);
+            cursor: pointer;
+            z-index: 6;
+            box-shadow: inset -6px -6px 14px rgba(0,0,0,0.45), 0 6px 16px rgba(0,0,0,0.4), inset 0 0 12px rgba(255,255,255,0.5);
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s;
+        }
+        .falling-answer-bubble::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            width: 22px;
+            height: 11px;
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 50%;
+            transform: rotate(-28deg);
+            pointer-events: none;
+        }
+        .falling-answer-bubble .b-icon {
+            font-size: 24px;
+            line-height: 1.1;
+            margin-bottom: 2px;
+            pointer-events: none;
+        }
+        .falling-answer-bubble .b-text {
+            line-height: 1.2;
+            pointer-events: none;
+        }
+        /* 答對時泡泡爆開特效 */
+        .falling-answer-bubble.bubble-burst-ok {
+            animation: fallingBubbleBurst 0.45s ease-out forwards !important;
+            pointer-events: none;
+        }
+        @keyframes fallingBubbleBurst {
+            0% { transform: scale(1); opacity: 1; }
+            40% { transform: scale(1.65); opacity: 0.95; box-shadow: 0 0 40px #FFFF00, inset 0 0 30px #FFF; border-width: 6px; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        /* 答錯時泡泡充氣變大特效 */
+        .falling-answer-bubble.bubble-wrong-inflated {
+            border-color: #FF1744;
+            box-shadow: inset -6px -6px 16px rgba(213,0,0,0.7), 0 0 25px rgba(255, 23, 68, 0.85);
+        }
+
+        /* 玩家可操控的上下左右瞄準準星 */
+        .pb-crosshair {
+            position: absolute;
+            width: 54px;
+            height: 54px;
+            border: 3px dashed #E6FF00;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9;
+            box-shadow: 0 0 12px rgba(230, 255, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pb-crosshair::before,
+        .pb-crosshair::after {
+            content: '';
+            position: absolute;
+            background: #FF1744;
+        }
+        .pb-crosshair::before { width: 16px; height: 3px; }
+        .pb-crosshair::after { width: 3px; height: 16px; }
+
+        /* 底部泡泡龍發射台 */
+        .pb-Bottom-line {
+            position: absolute;
+            bottom: 62px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #FFD54F 0, #FFD54F 12px, #5D4037 12px, #5D4037 20px);
+            z-index: 4;
+        }
+        .pb-launcher-zone {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 75px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 8;
+            pointer-events: none;
+        }
+        .pb-dragon-left {
+            position: absolute;
+            left: 12px;
+            bottom: 2px;
+            font-size: 30px;
+            filter: drop-shadow(0 2px 4px #000);
+        }
+        .pb-dragon-right {
+            position: absolute;
+            right: 12px;
+            bottom: 2px;
+            font-size: 30px;
+            transform: scaleX(-1);
+            filter: drop-shadow(0 2px 4px #000);
+        }
+        .pb-turret-wheel {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid #FFB300;
+            background: radial-gradient(circle, #5D4037, #212121);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        }
+        .pb-aim-arrow {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            width: 6px;
+            height: 90px;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            pointer-events: none;
+            z-index: 4;
+        }
+        .pb-aim-arrow::after {
+            content: '▲';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            color: #FFD54F;
+            text-shadow: 0 2px 4px #000;
+        }
+        .pb-loaded-bubble {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #FFF;
+            z-index: 10;
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.5), 0 0 12px #00E5FF;
+        }
+        .pb-flying-bubble {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #FFF;
+            z-index: 12;
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4), 0 0 15px #FFF;
+            pointer-events: none;
+        }
+
+        /* 街機底部控制面板 (四向搖桿 + 紅綠藍三色射擊鍵) */
+        .pb-control-deck {
+            background: linear-gradient(180deg, #90A4AE 0%, #607D8B 100%);
+            border-top: 6px solid #263238;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .pb-joystick-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .pb-dpad-cross {
+            display: grid;
+            grid-template-columns: repeat(3, 46px);
+            grid-template-rows: repeat(3, 42px);
+            gap: 4px;
+            align-items: center;
+            justify-items: center;
+        }
+        .joy-dir-btn {
+            width: 46px;
+            height: 42px;
+            background: #263238;
+            color: #FFD600;
+            border: 2px solid #CFD8DC;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .joy-dir-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #111;
+        }
+        .arcade-stick-base {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #37474F 40%, #111 100%);
+            border-radius: 50%;
+            border: 4px solid #212121;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 4px 10px #000;
+        }
+        .arcade-stick-shaft {
+            width: 12px;
+            height: 36px;
+            background: linear-gradient(90deg, #B0BEC5, #37474F);
+            position: absolute;
+            bottom: 32px;
+            transform-origin: bottom center;
+            transition: transform 0.1s ease;
+        }
+        .arcade-stick-ball {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 30%, #FF8A80, #D50000 65%, #7F0000 100%);
+            border: 2px solid #3E0000;
+            position: absolute;
+            top: -26px;
+            left: -15px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+        }
+        .pb-buttons-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .arcade-push-btn {
+            width: 72px;
+            height: 52px;
+            border-radius: 50%;
+            border: 4px solid #111;
+            color: #FFF;
+            font-weight: 900;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #111, 0 8px 15px rgba(0,0,0,0.5);
+            transition: transform 0.08s;
+            text-shadow: 0 1px 3px #000;
+        }
+        .arcade-push-btn.btn-red { background: radial-gradient(circle at 35% 30%, #FF80AB, #D81B60 75%); }
+        .arcade-push-btn.btn-green { background: radial-gradient(circle at 35% 30%, #B9F6CA, #00C853 75%); }
+        .arcade-push-btn.btn-blue { background: radial-gradient(circle at 35% 30%, #80D8FF, #0091EA 75%); }
+        .arcade-push-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 1px 0 #111;
+        }
+
+        /* -------- 遊戲三：經典《打地鼠》樣式 (參考 mole.jpg) -------- */
+        .mole-game-wrapper {
+            border: 5px solid #2E7D32;
+            border-radius: 26px;
+            overflow: hidden;
+            box-shadow: 0 14px 35px rgba(0,0,0,0.35);
+            background: #80DEEA;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        .mole-top-sky {
+            background: linear-gradient(180deg, #76E5FC 0%, #A7F0BA 100%);
+            padding: 16px 18px 26px;
+            text-align: center;
+            position: relative;
+        }
+        .mole-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .mole-question-banner {
+            background: #FFFFFF;
+            border: 4px solid #FF5722;
+            border-radius: 20px;
+            padding: 12px 18px;
+            color: #BF360C;
+            font-size: 18px;
+            font-weight: 900;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            display: inline-block;
+            max-width: 98%;
+            line-height: 1.4;
+        }
+        .mole-green-hill {
+            background: #4CE600;
+            border-top-left-radius: 50% 45px;
+            border-top-right-radius: 50% 45px;
+            margin-top: -18px;
+            padding: 32px 16px 26px;
+            position: relative;
+            min-height: 350px;
+            box-shadow: inset 0 10px 25px rgba(255,255,255,0.35);
+        }
+        .mole-holes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 145px);
+            gap: 20px 12px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .mole-hole-slot {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            cursor: pointer;
+        }
+        .mole-hole-slot.cursor-active .hole-oval {
+            outline: 4px dashed #FF1744;
+            outline-offset: 4px;
+        }
+        .hole-oval {
+            width: 170px;
+            max-width: 96%;
+            height: 44px;
+            background: radial-gradient(ellipse at 50% 65%, #995C00 0%, #995C00 52%, #000000 54%, #000000 100%);
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 6px 10px rgba(0,0,0,0.85);
+        }
+        .mole-clip-box {
+            position: absolute;
+            bottom: 16px;
+            width: 100%;
+            max-width: 160px;
+            height: 135px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .mole-character {
+            width: 104px;
+            height: 112px;
+            background: #B56E12;
+            border: 3px solid #784400;
+            border-radius: 52px 52px 12px 12px;
+            position: relative;
+            transform: translateY(120px);
+            transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 8px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .mole-character.up { transform: translateY(6px); }
+        .mole-sign {
+            background: #FFFDE7;
+            border: 2.5px solid #D32F2F;
+            color: #B71C1C;
+            font-weight: 900;
+            font-size: 12px;
+            padding: 3px 6px;
+            border-radius: 10px;
+            white-space: nowrap;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
+        }
+        .mole-face {
+            position: relative;
+            width: 80px;
+            height: 54px;
+        }
+        .mole-eye {
+            position: absolute;
+            top: 8px;
+            font-size: 16px;
+            font-weight: 900;
+            color: #000;
+            line-height: 1;
+        }
+        .mole-eye.left { left: 14px; }
+        .mole-eye.right { right: 14px; }
+        .mole-snout {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 26px;
+            height: 26px;
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+            border-radius: 0 0 50% 50%;
+        }
+        .mole-nose-dot {
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+        }
+        .mole-whiskers {
+            position: absolute;
+            top: 20px;
+            width: 16px;
+            height: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .mole-whiskers.left { left: 2px; transform: rotate(8deg); }
+        .mole-whiskers.right { right: 2px; transform: rotate(-8deg); }
+        .mole-whiskers span {
+            display: block;
+            height: 2px;
+            background: #000;
+            width: 100%;
+        }
+        .mole-hammer-fx {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-20%) rotate(25deg) scale(0);
+            z-index: 10;
+            pointer-events: none;
+            transition: transform 0.12s ease;
+        }
+        .mole-hammer-fx.swing {
+            transform: translateX(-35%) rotate(-28deg) scale(1);
+        }
+        .hammer-head {
+            width: 58px;
+            height: 82px;
+            background: #FF0000;
+            border-radius: 8px;
+            position: relative;
+            border: 3px dashed #FF5252;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+        }
+        .hammer-band {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            width: 100%;
+            height: 14px;
+            background: #FFFF00;
+        }
+        .hammer-handle {
+            width: 85px;
+            height: 12px;
+            background: #FF80AB;
+            position: absolute;
+            top: 50%;
+            left: 52px;
+            transform: translateY(-50%);
+            border-radius: 6px;
+        }
+        .hit-burst-star {
+            position: absolute;
+            top: 2px;
+            left: 8px;
+            width: 62px;
+            height: 62px;
+            background: #FF9800;
+            clip-path: polygon(50% 0%, 63% 25%, 93% 15%, 75% 42%, 100% 60%, 72% 68%, 82% 96%, 52% 77%, 25% 98%, 32% 68%, 2% 58%, 28% 42%, 12% 14%, 40% 26%);
+            z-index: 9;
+            opacity: 0;
+            transform: scale(0.3);
+            transition: 0.15s;
+            pointer-events: none;
+        }
+        .hit-burst-star.show {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        .mole-control-bar {
+            background: #2E7D32;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: #FFF;
+        }
+        .mole-dpad-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .mole-dir-btn {
+            background: #FFF;
+            color: #1B5E20;
+            border: 3px solid #A5D6A7;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1B5E20;
+        }
+        .mole-dir-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #1B5E20;
+        }
+        .mole-whack-btn {
+            background: linear-gradient(180deg, #FF1744, #D50000);
+            color: #FFFF00;
+            border: 3px solid #FFFF00;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #7F0000;
+        }
+        .mole-whack-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #7F0000;
+        }
+
+        .action-bar { margin-top: 30px; padding-top: 25px; border-top: 2px solid #EF9A9A; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #0288D1, #01579B); color: white; border: none; padding: 12px 32px; border-radius: 60px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.15s; box-shadow: 0 4px 14px rgba(2, 136, 209, 0.35); }
+        .btn-primary:hover:not(:disabled) { transform: scale(1.03); box-shadow: 0 6px 20px rgba(2, 136, 209, 0.5); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-secondary { background: #E1F5FE; color: #01579B; border: 2px solid #0288D1; padding: 12px 24px; border-radius: 60px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.1s; }
+        .btn-secondary:hover { background: #B3E5FC; }
+        .score-box { background: #E1F5FE; padding: 8px 20px; border-radius: 40px; font-weight: 700; color: #01579B; border: 1px solid #0288D1; font-size: 15px; }
+        .reset-link { color: #01579B; cursor: pointer; text-decoration: underline; font-size: 14px; font-weight: 600; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; max-width: 600px; width: 92%; border-radius: 28px; padding: 28px 28px 32px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); border: 3px solid #4A148C; position: relative; animation: modalPop 0.3s ease; }
+        @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-close { position: absolute; top: 12px; right: 18px; font-size: 28px; font-weight: 700; color: #4A148C; cursor: pointer; background: none; border: none; line-height: 1; transition: 0.15s; }
+        .modal-close:hover { transform: rotate(90deg); color: #7E57C2; }
+        .modal-box h2 { color: #4A148C; font-size: 22px; margin-bottom: 14px; border-bottom: 2px solid #E1BEE7; padding-bottom: 10px; }
+        .modal-box p { font-size: 17px; line-height: 1.7; color: #212121; font-weight: 500; }
+        .modal-box .highlight { color: #FFC107; font-weight: 700; }
+
+        /* 第三關「互動狙擊場」專屬炫酷遊戲化 CSS 特效 */
+        .shooting-arena {
+            background: radial-gradient(circle, #37474F 0%, #212121 100%);
+            border-radius: 24px; padding: 22px 20px; color: white; text-align: center;
+            position: relative; overflow: hidden; border: 4px solid #FFD600;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6); margin-bottom: 15px;
+        }
+        .arena-status {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 18px; font-weight: 700; border-bottom: 2px dashed #546E7A; padding-bottom: 12px;
+            flex-wrap: wrap; gap: 8px;
+        }
+        .arena-progress { background: #FFD600; color: #212121; padding: 4px 16px; border-radius: 20px; font-size: 14px; box-shadow: 0 2px 6px rgba(255,214,0,0.3); }
+        .arena-question-box { min-height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        .arena-question-text { font-size: 20px; font-weight: 700; color: #FFF; text-shadow: 0 2px 8px rgba(0,0,0,0.9); line-height: 1.5; }
+        .targets-range { display: flex; justify-content: center; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; min-height: 170px; align-items: center; }
+        
+        .shooting-target {
+            width: 145px; height: 145px; border-radius: 50%;
+            background: radial-gradient(circle, #D32F2F 20%, #FFFFFF 21%, #FFFFFF 40%, #D32F2F 41%, #D32F2F 60%, #FFFFFF 61%, #FFFFFF 80%, #D32F2F 81%);
+            border: 4px solid #111; box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.4);
+            cursor: crosshair; display: flex; align-items: center; justify-content: center; padding: 10px;
+            transition: transform 0.2s, box-shadow 0.2s; position: relative; outline: none;
+        }
+        .targets-range .shooting-target:nth-child(1) { animation: targetFloat 3s ease-in-out infinite; }
+        .targets-range .shooting-target:nth-child(2) { animation: targetFloat 2.6s ease-in-out infinite 0.3s; }
+        .targets-range .shooting-target:nth-child(3) { animation: targetFloat 3.4s ease-in-out infinite 0.6s; }
+        @keyframes targetFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .shooting-target:hover:not(:disabled) {
+            animation-play-state: paused !important; transform: scale(1.1) translateY(-4px) !important;
+            box-shadow: 0 0 25px rgba(255, 214, 0, 0.6), 0 12px 24px rgba(0,0,0,0.6);
+        }
+        .shooting-target .target-label {
+            color: #212121; font-weight: 800; font-size: 14px; background: rgba(255, 255, 255, 0.95);
+            padding: 6px 10px; border-radius: 8px; border: 2px solid #212121; text-align: center;
+            pointer-events: none; box-shadow: 0 3px 6px rgba(0,0,0,0.3); max-width: 120px; line-height: 1.35;
+        }
+        .shooting-target.hit-correct {
+            background: radial-gradient(circle, #2E7D32 20%, #C8E6C9 21%, #C8E6C9 40%, #2E7D32 41%, #2E7D32 60%, #C8E6C9 61%, #C8E6C9 80%, #2E7D32 81%);
+            animation: targetPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+        }
+        .shooting-target.hit-correct .target-label { background: #E8F5E9; color: #1B5E20; border-color: #2E7D32; }
+        .shooting-target.hit-wrong {
+            background: radial-gradient(circle, #555 20%, #BBB 21%, #BBB 40%, #555 41%, #555 60%, #BBB 61%, #BBB 80%, #555 81%);
+            animation: targetStrikeShake 0.4s ease forwards !important; opacity: 0.5;
+        }
+        .shooting-target.hit-wrong .target-label { background: #FFEBEE; color: #B71C1C; border-color: #C62828; text-decoration: line-through; }
+        .shooting-target.reveal-correct {
+            background: radial-gradient(circle, #2E7D32 20%, #C8E6C9 21%, #C8E6C9 40%, #2E7D32 41%, #2E7D32 60%, #C8E6C9 61%, #C8E6C9 80%, #2E7D32 81%);
+            border-color: #FFD600; box-shadow: 0 0 25px #FFD600; animation: none !important;
+        }
+        .shooting-target:disabled { cursor: not-allowed; animation-play-state: paused !important; }
+        @keyframes targetPop { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+        @keyframes targetStrikeShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px) rotate(-4deg); }
+            40%, 80% { transform: translateX(8px) rotate(4deg); }
+        }
+        .arena-controls { margin-top: 15px; min-height: 45px; display: flex; justify-content: center; align-items: center; }
+
+        /* ================= 第四關比較與總結 CSS ================= */
+        .compare-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+        .compare-card { flex: 1 1 280px; background: #fff; border-radius: 16px; border: 2px solid #E0E0E0; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06); transition: transform 0.3s ease; }
+        .compare-card:hover { transform: translateY(-5px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+        .cc-header { padding: 16px; text-align: center; font-weight: 800; font-size: 18px; color: white; letter-spacing: 1px; }
+        .cc-open { background: linear-gradient(135deg, #F06292, #E91E63); }
+        .cc-street { background: linear-gradient(135deg, #4FC3F7, #0288D1); }
+        .cc-drink { background: linear-gradient(135deg, #81C784, #388E3C); }
+        .cc-body { padding: 20px; background: #FAFAFA; height: calc(100% - 55px); }
+        .cc-section { margin-bottom: 18px; background: white; padding: 12px; border-radius: 12px; border: 1px solid #EEEEEE; }
+        .cc-section h4 { font-size: 15px; color: #424242; margin-bottom: 10px; border-bottom: 2px dashed #E0E0E0; padding-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .cc-section ul { padding-left: 22px; margin: 0; font-size: 14px; color: #555; line-height: 1.6; }
+        .cc-section ul li { margin-bottom: 6px; }
+
+        /* ================= 手機與平板響應式設計 (Media Queries) ================= */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 18px 14px 26px; border-radius: 22px; }
+            h1 { font-size: 21px; padding-bottom: 14px; margin-bottom: 14px; }
+            h1 small { font-size: 13px; padding: 4px 12px; }
+            .global-hud { padding: 10px 14px; border-radius: 16px; }
+            .hud-total { font-size: 16px; padding: 5px 14px; }
+            .hud-detail { font-size: 12px; padding: 4px 9px; }
+            .step-btn { font-size: 13px; padding: 8px 12px; flex: 1 1 44%; }
+            .question-panel { padding: 14px 12px; margin-bottom: 20px; }
+            .question-panel h2 { font-size: 17px; }
+            .question-panel .scenario, .question-panel .task-list { font-size: 14px; }
+
+            /* 坦克迷宮手機版：上螢幕、下控制器 */
+            .tank-arcade { padding: 12px 10px; border-width: 4px; }
+            .tank-question-text { font-size: 16px; }
+            .fc-controller { width: 100%; max-width: 340px; padding: 12px; }
+            .dpad-grid { grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(3, 48px); }
+
+            /* 泡泡龍手機版 */
+            .pb-screen { padding: 8px; }
+            .pb-question-banner { font-size: 15px; padding: 10px 12px; }
+            .pb-control-deck { padding: 12px 10px; gap: 12px; }
+            .arcade-stick-base { display: none; } /* 手機版隱藏裝飾搖桿底座，騰出空間給方向鍵與大按鈕 */
+            .pb-dpad-cross { grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 42px); }
+            .joy-dir-btn { width: 48px; height: 42px; }
+            .arcade-push-btn { width: 64px; height: 48px; font-size: 12px; }
+
+            /* 打地鼠手機版：3x2 網格自適應 */
+            .mole-top-sky { padding: 12px 10px 22px; }
+            .mole-question-banner { font-size: 15px; padding: 10px 12px; }
+            .mole-green-hill { padding: 24px 8px 20px; min-height: 290px; }
+            .mole-holes-grid {
+                grid-template-rows: repeat(2, 122px);
+                gap: 14px 6px;
+            }
+            .hole-oval { height: 34px; }
+            .mole-clip-box { bottom: 12px; height: 112px; }
+            .mole-character { width: 82px; height: 92px; padding-top: 6px; }
+            .mole-sign { font-size: 10px; padding: 2px 4px; border-width: 2px; }
+            .mole-face { width: 66px; height: 44px; transform: scale(0.85); transform-origin: top center; }
+            .mole-hammer-fx { transform: translateX(-20%) rotate(25deg) scale(0); }
+            .mole-hammer-fx.swing { transform: translateX(-35%) rotate(-28deg) scale(0.75); }
+            .mole-control-bar { justify-content: center; padding: 12px 10px; }
+            .mole-dpad-inline { justify-content: center; width: 100%; }
+            .mole-whack-btn { width: 100%; max-width: 300px; text-align: center; }
+
+            /* 第三關狙擊靶場手機版 */
+            .shooting-arena { padding: 16px 12px; }
+            .arena-question-text { font-size: 17px; }
+            .shooting-target { width: 110px; height: 110px; }
+            .shooting-target .target-label { font-size: 12px; padding: 4px 6px; }
+
+            .action-bar { flex-direction: column; align-items: stretch; text-align: center; }
+            .btn-primary, .btn-secondary { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+
+    <h1>🧩 小組討論審題四步曲 <small>選擇慶祝活動</small></h1>
+
+    <!-- 全域累積總分與音效面板 -->
+    <div class="global-hud">
+        <div class="hud-scores">
+            <div class="hud-total" id="globalTotalScore">🏆 累積總分：0 分</div>
+            <div class="hud-detail" id="hudStep1Score">第一關：0 分</div>
+            <div class="hud-detail" id="hudStep2Score">第二關：0 分</div>
+            <div class="hud-detail" id="hudStep3Score">第三關：0 分</div>
+            <span class="hud-rule">（每題答對 +2 分，答錯 -1 分）</span>
+        </div>
+        <button class="sound-toggle" id="soundToggleBtn">🔊 音效：開啟</button>
+    </div>
+
+    <div class="step-indicator" id="stepIndicator">
+        <div class="step-btn active" data-step="1">❶ 確定討論核心</div>
+        <div class="step-btn" data-step="2">❷ 分析優缺點</div>
+        <div class="step-btn" data-step="3">❸ 尋找活動之「最」</div>
+        <div class="step-btn" data-step="4">❹ 比較與總結</div>
+    </div>
+
+    <div class="question-panel" id="questionPanel">
+        <h2>📋 討論題目：選擇慶祝活動</h2>
+        <div class="scenario">
+            <strong>情景：</strong>你是香港健樂汽水有限公司市場推廣部主任。公司計劃舉辦慶祝活動，慶祝公司成立 50 週年，並推廣產品。現在，部門經理請你和其他同事討論並選擇最合適的慶祝活動，稍後向他報告。
+        </div>
+        <div>
+            <strong>任務：</strong>
+            <ol class="task-list">
+                <li>根據參考資料，選擇你認為最合適的慶祝活動，並解釋原因；</li>
+                <li>說明該活動如何達到目的：慶祝公司成立 50 週年，推廣產品；</li>
+                <li>回應與會者的發言；</li>
+                <li>嘗試與其他組員達成共識。</li>
+            </ol>
+        </div>
+        <div class="ref-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>活動</th>
+                        <th>汽水廠開放日<br><img src="p2.jpg" alt="汽水廠開放日"></th>
+                        <th>街頭同樂日<br><img src="p3.jpg" alt="街頭同樂日"></th>
+                        <th>汽水競飲大賽<br><img src="p4.jpg" alt="汽水競飲大賽"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="label">日期</td><td>8月22-23日 (六和日)</td><td>8月9日 (日)</td><td>8月29日 (六)</td></tr>
+                    <tr><td class="label">時間</td><td>10:00-17:00</td><td>10:00-13:00</td><td>14:00-17:00</td></tr>
+                    <tr><td class="label">地點</td><td>沙田汽水廠</td><td>尖沙咀碼頭</td><td>維多利亞公園球場</td></tr>
+                    <tr><td class="label">詳情</td>
+                        <td><ul><li>參觀公司，專人導賞</li><li>認識公司歷史</li><li>生產及包裝過程</li><li>汽水瓶DIY</li><li>購買特別版紀念品</li><li>贈飲</li></ul></td>
+                        <td><ul><li>魔術表演</li><li>5個攤位遊戲</li><li>與巨型汽水模型合照</li><li>派發紀念品、贈飲</li><li>飲料大特賣 (6折)</li></ul></td>
+                        <td><ul><li>獎項：冠、亞、季軍</li><li>獎金：一萬、五千、三千</li><li>表演嘉賓助興 (待定)</li><li>歌曲及舞蹈</li><li>網上平台直播</li></ul></td>
+                    </tr>
+                    <tr><td class="label">名額</td><td>120人/日 (兩個月前報名)</td><td>不限</td><td>參賽者20人 (初賽兩週前完成)<br>觀眾：不限</td></tr>
+                    <tr><td class="label">開支</td><td>$30,000</td><td>$60,000</td><td>$100,000</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="game-area">
+
+        <!-- ==================== 第一關 ==================== -->
+        <div class="step-panel active" id="step1">
+            <div class="top-nav-bar">
+                <div class="section-title" style="margin-bottom:0;">❶ 確定討論核心 — 判斷下列陳述是否為本次討論的核心目的</div>
+                <button class="retry-btn" id="retryStep1Btn">🔄 重新挑戰第一關</button>
+            </div>
+            
+            <div class="progress-container" style="margin-top:14px;">
+                <div class="progress-bar" id="step1Progress"></div>
+            </div>
+
+            <div id="judgeContainer"></div>
+            
+            <div id="step1Feedback" style="margin-top:16px;font-weight:700;text-align:center;min-height:30px;"></div>
+            <div class="action-bar">
+                <span class="score-box" id="step1ScoreBox">⭐ 本關得分：0 分｜總分：0 分</span>
+                <button class="btn-primary" id="nextToStep2" disabled>進入下一步 ➜</button>
+            </div>
+        </div>
+
+        <!-- ==================== 第二關：三大趣味小遊戲 ==================== -->
+        <div class="step-panel" id="step2">
+            <div class="top-nav-bar">
+                <button class="back-btn" id="btnBackTo1">🔙 返回第一關</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="retry-btn" id="retryCurrentMgBtn">🔄 重新挑戰本小遊戲</button>
+                    <button class="retry-btn" id="retryStep2AllBtn">🔄 重新挑戰第二關全部</button>
+                </div>
+            </div>
+            
+            <div class="section-title">❷ 分析優缺點 — 闖過三個趣味小遊戲，掌握各活動的優缺點！</div>
+
+            <!-- 小遊戲分頁按鈕 -->
+            <div class="minigame-tabs">
+                <button class="mg-tab active" data-mg="1" id="mgTab1">🕹️ 遊戲一：坦克大戰 (0/8)</button>
+                <button class="mg-tab" data-mg="2" id="mgTab2">🫧 遊戲二：泡泡龍優點 (0/7)</button>
+                <button class="mg-tab" data-mg="3" id="mgTab3">🔨 遊戲三：打地鼠找缺點 (0/6)</button>
+            </div>
+
+            <!-- 遊戲一：紅白機坦克迷宮大戰 (8題) -->
+            <div class="mg-panel active" id="mgPanel1">
+                <div class="tank-arcade">
+                    <div class="tank-header">
+                        <span class="tank-badge">🕹️ FC BATTLE TANK — 繞過紅磚牆障礙物，找出答案並射擊！</span>
+                        <span id="tankProgressText" style="color:#FFD600; font-weight:800;">第 1 / 8 題</span>
+                    </div>
+                    <div class="tank-mission-box">
+                        <div class="tank-phase-tag" id="tankPhaseTag">步驟一：操控坦克在區域內移動，繞過紅牆找出所屬「活動基地」並開火！</div>
+                        <div class="tank-question-text" id="tankQuestionText">題目載入中...</div>
+                    </div>
+                    <div class="tank-stage-wrap">
+                        <!-- 自動等比例縮放畫布外框 -->
+                        <div class="responsive-canvas-viewport" id="tankViewport" data-base-w="560" data-base-h="350">
+                            <div class="tank-map" id="tankMap">
+                                <!-- 紅磚牆障礙物、散落各區的答案目標與玩家坦克由 JS 動態生成 -->
+                            </div>
+                        </div>
+                        <div class="fc-controller">
+                            <div class="fc-controller-title">NINTENDO 控制器</div>
+                            <div class="dpad-grid">
+                                <div></div>
+                                <button class="dpad-btn" id="tankUpBtn" title="向上移動">▲</button>
+                                <div></div>
+                                <button class="dpad-btn" id="tankLeftBtn" title="向左移動">◀</button>
+                                <div class="dpad-center"></div>
+                                <button class="dpad-btn" id="tankRightBtn" title="向右移動">▶</button>
+                                <div></div>
+                                <button class="dpad-btn" id="tankDownBtn" title="向下移動">▼</button>
+                                <div></div>
+                            </div>
+                            <button class="fire-btn" id="tankFireBtn">🔥 發射砲彈 (FIRE)</button>
+                            <div style="font-size:12px; color:#FFCCBC; text-align:center; line-height:1.4;">
+                                手機可按方向鍵移動與發射<br>電腦支援 WASD / 方向鍵 + 空白鍵
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tankFeedback" style="margin-top:14px; text-align:center; font-weight:800; min-height:26px; font-size:15px;"></div>
+                </div>
+            </div>
+
+            <!-- 遊戲二：街機《泡泡龍》動態掉落泡泡版 (7題 - 看優點打掉落泡泡) -->
+            <div class="mg-panel" id="mgPanel2">
+                <div class="pb-cabinet">
+                    <div class="pb-marquee">
+                        <div class="pb-marquee-title">Gamer Old Fashion</div>
+                        <div class="pb-marquee-sub">【街機泡泡龍 Puzzle Bobble】帶著答案的泡泡不斷掉下！直接點擊或用上下左右瞄準射擊！（答對爆開，答錯變大）</div>
+                    </div>
+                    <div class="pb-question-banner" id="bubbleQuestionText">優點句子載入中...</div>
+                    <div class="pb-screen">
+                        <div class="pb-hud-bar">
+                            <span>1UP SCORE: <span id="pbHudScore">0000</span></span>
+                            <span id="bubbleProgressText">ROUND 1 / 7</span>
+                        </div>
+                        <!-- 自動等比例縮放畫布外框 -->
+                        <div class="responsive-canvas-viewport" id="pbViewport" data-base-w="550" data-base-h="360">
+                            <div class="pb-playfield" id="pbPlayfield">
+                                <!-- 飄落的答案泡泡、準星與底部小恐龍發射台由 JS 動態生成 -->
+                            </div>
+                        </div>
+                        <div id="bubbleFeedback" style="margin-top:10px; text-align:center; font-weight:900; min-height:26px; font-size:15px; color:#FFF; text-shadow:0 2px 4px #000;"></div>
+                    </div>
+                    <!-- 街機底部上下左右搖桿與三色發射鍵 -->
+                    <div class="pb-control-deck">
+                        <div class="pb-joystick-area">
+                            <div class="pb-dpad-cross">
+                                <div></div>
+                                <button class="joy-dir-btn" id="pbJoyUpBtn" title="準星向上">▲</button>
+                                <div></div>
+                                <button class="joy-dir-btn" id="pbJoyLeftBtn" title="準星向左">◀</button>
+                                <div style="color:#FFF; font-size:11px; font-weight:800;">瞄準</div>
+                                <button class="joy-dir-btn" id="pbJoyRightBtn" title="準星向右">▶</button>
+                                <div></div>
+                                <button class="joy-dir-btn" id="pbJoyDownBtn" title="準星向下">▼</button>
+                                <div></div>
+                            </div>
+                            <div class="arcade-stick-base" id="pbStickBase" title="街機搖桿">
+                                <div class="arcade-stick-shaft" id="pbStickShaft">
+                                    <div class="arcade-stick-ball"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pb-buttons-group">
+                            <button class="arcade-push-btn btn-red" id="pbShootBtn1">射擊<br>SHOOT</button>
+                            <button class="arcade-push-btn btn-green" id="pbShootBtn2">射擊<br>FIRE</button>
+                            <button class="arcade-push-btn btn-blue" id="pbShootBtn3">射擊<br>POP</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 遊戲三：經典《打地鼠》樣式 (6題 - 看缺點敲擊彈出的地鼠) -->
+            <div class="mg-panel" id="mgPanel3">
+                <div class="mole-game-wrapper">
+                    <div class="mole-top-sky">
+                        <div class="mole-header-row">
+                            <span style="background:#2E7D32; color:#FFF; padding:5px 14px; border-radius:20px; font-weight:900; font-size:14px;">🔨 歡樂打地鼠 — 找出缺點所屬活動</span>
+                            <span id="moleProgressText" style="background:#FF5722; color:#FFF; padding:5px 14px; border-radius:20px; font-weight:900; font-size:14px;">第 1 / 6 題</span>
+                        </div>
+                        <div class="mole-question-banner" id="moleQuestionText">缺點句子載入中...</div>
+                    </div>
+                    <div class="mole-green-hill">
+                        <div class="mole-holes-grid" id="moleHolesGrid"></div>
+                        <div id="moleFeedback" style="margin-top:16px; text-align:center; font-weight:900; min-height:26px; font-size:15px; color:#1B5E20; background:rgba(255,255,255,0.88); border-radius:20px; padding:6px 14px; max-width:560px; margin-left:auto; margin-right:auto;">
+                            💡 提示：直接用手指/滑鼠點擊冒出的正確地鼠，或用下方方向鍵瞄準後按「敲擊」！
+                        </div>
+                    </div>
+                    <div class="mole-control-bar">
+                        <div class="mole-dpad-inline">
+                            <span style="font-weight:800; font-size:14px;">🎮 方向鍵：</span>
+                            <button class="mole-dir-btn" id="moleUpBtn">▲ 上</button>
+                            <button class="mole-dir-btn" id="moleDownBtn">▼ 下</button>
+                            <button class="mole-dir-btn" id="moleLeftBtn">◀ 左</button>
+                            <button class="mole-dir-btn" id="moleRightBtn">▶ 右</button>
+                        </div>
+                        <button class="mole-whack-btn" id="moleWhackBtn">🔨 敲擊地鼠！(HIT)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step2Feedback" style="margin-top:16px;font-weight:700;text-align:center;min-height:30px;"></div>
+            <div class="action-bar">
+                <span class="score-box" id="step2ScoreBox">⭐ 第二關得分：0 分｜總分：0 分</span>
+                <button class="btn-primary" id="nextToStep3" disabled>進入下一步 ➜</button>
+            </div>
+        </div>
+
+        <!-- ==================== 第三關 ==================== -->
+        <div class="step-panel" id="step3">
+            <div class="top-nav-bar">
+                <button class="back-btn" id="btnBackTo2">🔙 返回第二關</button>
+                <button class="retry-btn" id="redoStep3Btn">🔄 重新挑戰第三關</button>
+            </div>
+            
+            <div class="section-title">❸ 尋找活動之「最」 — 根據活動資料，選出符合描述的活動</div>
+            <div id="quizContainer"></div>
+            <div id="step3Feedback" style="margin-top:16px;font-weight:700;text-align:center;min-height:30px;"></div>
+            <div class="action-bar">
+                <span class="score-box" id="step3ScoreBox">⭐ 本關得分：0 分｜總分：0 分</span>
+                <button class="btn-primary" id="nextToStep4" disabled>進入比較與總結 ➜</button>
+            </div>
+        </div>
+
+        <!-- ==================== 第四關 ==================== -->
+        <div class="step-panel" id="step4">
+            <div class="top-nav-bar">
+                <button class="back-btn" id="btnBackTo3">🔙 返回第三關</button>
+            </div>
+            
+            <div class="section-title">❹ 比較與總結 — 綜合活動之最與優缺點</div>
+            
+            <div class="compare-grid">
+                <div class="compare-card">
+                    <div class="cc-header cc-open">汽水廠開放日</div>
+                    <div class="cc-body">
+                        <div class="cc-section">
+                            <h4>🏆 活動之最</h4>
+                            <ul>
+                                <li>時間跨度最長</li>
+                                <li>開支成本最低</li>
+                            </ul>
+                        </div>
+                        <div class="cc-section">
+                            <h4>✅ 優點</h4>
+                            <ul>
+                                <li>專人導賞：具教育性，強化品牌專業性</li>
+                                <li>DIY體驗：創造個人化紀念品</li>
+                                <li>限量紀念品：具收藏價值</li>
+                                <li>贈飲：聽完歷史再喝，建立深層情感連結</li>
+                            </ul>
+                        </div>
+                        <div class="cc-section">
+                            <h4>❌ 缺點</h4>
+                            <ul>
+                                <li>名額有限（120人/日），推廣覆蓋面不足</li>
+                                <li>無即時銷售優惠，產品推廣直接性較弱</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="compare-card">
+                    <div class="cc-header cc-street">街頭同樂日</div>
+                    <div class="cc-body">
+                        <div class="cc-section">
+                            <h4>🏆 活動之最</h4>
+                            <ul>
+                                <li>參與人數不受限制</li>
+                                <li>公眾曝光率最高</li>
+                            </ul>
+                        </div>
+                        <div class="cc-section">
+                            <h4>✅ 優點</h4>
+                            <ul>
+                                <li>魔術表演與攤位遊戲：歡樂氣氛、有趣</li>
+                                <li>巨型模型合照：利於社交媒體傳播</li>
+                                <li>即場優惠：6折特賣，直接刺激銷售</li>
+                                <li>派發紀念品、贈飲：體驗味道，轉化為潛在消費者</li>
+                            </ul>
+                        </div>
+                        <div class="cc-section">
+                            <h4>❌ 缺點</h4>
+                            <ul>
+                                <li>活動形式較常見，缺乏獨特記憶點</li>
+                                <li>無後續延續性</li>
+                                <li>天氣因素影響大（戶外）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="compare-card">
+                    <div class="cc-header cc-drink">汽水競飲大賽</div>
+                    <div class="cc-body">
+                        <div class="cc-section">
+                            <h4>🏆 活動之最</h4>
+                            <ul>
+                                <li>成本最高，預算負擔最重</li>
+                            </ul>
+                        </div>
+                        <div class="cc-section">
+                            <h4>✅ 優點</h4>
+                            <ul>
+                                <li>高額獎金：吸引參賽者及媒體關注</li>
+                                <li>競技元素：比賽性質，緊張刺激具觀賞性</li>
+                                <li>表演嘉賓+直播：娛樂性強</li>
+                                <li>初賽+決賽：延續話題熱度</li>
+                            </ul>
+                        </div>
+                        <div class="cc-section">
+                            <h4>❌ 缺點</h4>
+                            <ul>
+                                <li>參賽者僅20人，焦點過度集中於少數人</li>
+                                <li>競飲可能有健康疑慮，引發負面觀感</li>
+                                <li>籌備複雜（初賽、嘉賓、直播）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar" style="justify-content: center; flex-direction: column; gap: 15px;">
+                <div class="score-box" id="finalSummaryScore" style="font-size: 17px; padding: 12px 24px; background:#C8E6C9; color:#1B5E20; border-color:#2E7D32;">
+                    🎉 恭喜你完成所有分析！請根據上方圖表與組員討論，達成最終選擇共識。
+                </div>
+                <button class="retry-btn" style="font-size:16px; padding:10px 26px; justify-content:center;" id="resetAllGameBtn">🔄 重新挑戰全關卡</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <button class="modal-close" id="modalClose">✕</button>
+        <h2 id="modalTitle">🎉 關卡完成！</h2>
+        <p id="modalContent"></p>
+    </div>
+</div>
+
+<script>
+(function() {
+    /* ================= 跨裝置畫布自動等比例縮放引擎 ================= */
+    function updateCanvasScalers() {
+        document.querySelectorAll('.responsive-canvas-viewport').forEach(vp => {
+            const baseW = parseFloat(vp.dataset.baseW) || 560;
+            const baseH = parseFloat(vp.dataset.baseH) || 350;
+            const child = vp.firstElementChild;
+            if (!child) return;
+            const availW = vp.clientWidth;
+            if (availW <= 0) return;
+            const scale = Math.min(1, availW / baseW);
+            child.style.transform = `scale(${scale})`;
+            vp.style.height = Math.ceil(baseH * scale) + 'px';
+        });
+    }
+    window.addEventListener('resize', updateCanvasScalers);
+    window.addEventListener('orientationchange', () => setTimeout(updateCanvasScalers, 150));
+
+    /* ================= 音效系統 (Web Audio API 依各遊戲訂製) ================= */
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function playSound(type) {
+        if (!soundEnabled) return;
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'correct') {
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+                gain.gain.setValueAtTime(0.11, now + idx * 0.055);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.12);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now + idx * 0.055);
+                osc.stop(now + idx * 0.055 + 0.12);
+            });
+        } else if (type === 'wrong') {
+            [196.00, 146.83].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.13);
+                gain.gain.setValueAtTime(0.14, now + idx * 0.13);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.13 + 0.17);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now + idx * 0.13);
+                osc.stop(now + idx * 0.13 + 0.17);
+            });
+        } else if (type === 'tankMove') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(95, now);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.045);
+        } else if (type === 'tankFire') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(620, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.15);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'brickHit') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + 0.1);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.11);
+        } else if (type === 'aimTick') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(750, now);
+            gain.gain.setValueAtTime(0.07, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.03);
+        } else if (type === 'bubbleLaunch') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(280, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.13);
+        } else if (type === 'bubbleClusterPop') {
+            [420, 580, 760, 980, 1250].forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                const t = now + i * 0.035;
+                osc.frequency.setValueAtTime(f, t);
+                osc.frequency.exponentialRampToValueAtTime(f * 1.4, t + 0.06);
+                gain.gain.setValueAtTime(0.16, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.07);
+            });
+        } else if (type === 'bubbleInflate') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(360, now + 0.22);
+            gain.gain.setValueAtTime(0.22, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.24);
+        } else if (type === 'molePop') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(240, now);
+            osc.frequency.exponentialRampToValueAtTime(520, now + 0.09);
+            gain.gain.setValueAtTime(0.06, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'hammerBonk') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(65, now + 0.14);
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'hammerWhoosh') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(140, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.11);
+        } else if (type === 'fanfare') {
+            [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                const startT = now + idx * 0.11;
+                osc.frequency.setValueAtTime(freq, startT);
+                gain.gain.setValueAtTime(0.13, startT);
+                gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.15);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(startT);
+                osc.stop(startT + 0.15);
+            });
+        }
+    }
+
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    soundToggleBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundToggleBtn.textContent = soundEnabled ? '🔊 音效：開啟' : '🔇 音效：靜音';
+        soundToggleBtn.classList.toggle('muted', !soundEnabled);
+        if (soundEnabled) playSound('correct');
+    });
+
+    /* ================= 全域分數管理（答對+2，答錯-1） ================= */
+    let currentStep = 1;
+    let scores = {
+        step1: 0,
+        mg1: 0,
+        mg2: 0,
+        mg3: 0,
+        step3: 0
+    };
+
+    function getStep2Score() {
+        return scores.mg1 + scores.mg2 + scores.mg3;
+    }
+    function getTotalScore() {
+        return scores.step1 + getStep2Score() + scores.step3;
+    }
+
+    function showFloatingDelta(delta, x, y) {
+        const el = document.createElement('div');
+        el.className = 'score-float ' + (delta > 0 ? 'plus' : 'minus');
+        el.textContent = delta > 0 ? `+${delta} 分` : `${delta} 分`;
+        const safeX = Math.max(40, Math.min(window.innerWidth - 90, x || window.innerWidth / 2));
+        const safeY = Math.max(40, Math.min(window.innerHeight - 60, y || window.innerHeight / 2));
+        el.style.left = safeX + 'px';
+        el.style.top = safeY + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    }
+
+    function updateAllScoreUI() {
+        const total = getTotalScore();
+        const s2 = getStep2Score();
+        document.getElementById('globalTotalScore').textContent = `🏆 累積總分：${total} 分`;
+        document.getElementById('hudStep1Score').textContent = `第一關：${scores.step1} 分`;
+        document.getElementById('hudStep2Score').textContent = `第二關：${s2} 分`;
+        document.getElementById('hudStep3Score').textContent = `第三關：${scores.step3} 分`;
+
+        document.getElementById('step1ScoreBox').textContent = `⭐ 本關得分：${scores.step1} 分｜總分：${total} 分`;
+        document.getElementById('step2ScoreBox').textContent = `⭐ 第二關得分：${s2} 分 (坦克:${scores.mg1} / 泡泡:${scores.mg2} / 地鼠:${scores.mg3})｜總分：${total} 分`;
+        document.getElementById('step3ScoreBox').textContent = `⭐ 本關得分：${scores.step3} 分｜總分：${total} 分`;
+        document.getElementById('finalSummaryScore').textContent = `🎉 恭喜你完成所有分析！（累積總分：${total} 分）請根據上方圖表與組員討論，達成最終選擇共識。`;
+
+        const pbHud = document.getElementById('pbHudScore');
+        if (pbHud) pbHud.textContent = String(Math.max(0, scores.mg2 * 100)).padStart(4, '0');
+    }
+
+    function addScore(bucket, delta, evt) {
+        scores[bucket] += delta;
+        updateAllScoreUI();
+        if (evt && typeof evt.clientX === 'number') {
+            showFloatingDelta(delta, evt.clientX, evt.clientY);
+        } else {
+            const hud = document.getElementById('globalTotalScore').getBoundingClientRect();
+            showFloatingDelta(delta, hud.left + 60, hud.top + 20);
+        }
+    }
+
+    function shuffleArray(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    /* ================= 彈窗與步驟切換 ================= */
+    const stepPanels = document.querySelectorAll('.step-panel');
+    const stepBtns = document.querySelectorAll('.step-btn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalClose = document.getElementById('modalClose');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+
+    function showModal(step) {
+        playSound('fanfare');
+        let title = '🎉 關卡完成！';
+        let content = '';
+        if (step === 1) content = '確定討論核心：<span class="highlight">題目中的活動目的就是討論核心</span>。';
+        else if (step === 2) content = '分析優缺點：<span class="highlight">重點分析活動詳情，並解釋活動的優點如何達到活動目的</span>。';
+        else if (step === 3) content = '尋找活動之「最」：<span class="highlight">重點分析時間、地點、名額、人手安排、開支等</span>。';
+        modalTitle.textContent = title;
+        modalContent.innerHTML = content;
+        modalOverlay.classList.add('active');
+    }
+
+    function closeModal() { modalOverlay.classList.remove('active'); }
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+    function switchStep(step) {
+        currentStep = step;
+        stepPanels.forEach((p, idx) => p.classList.toggle('active', idx === step - 1));
+        stepBtns.forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === step - 1);
+            if (idx < step - 1) btn.classList.add('done');
+            else btn.classList.remove('done');
+        });
+        setTimeout(updateCanvasScalers, 30);
+        syncActiveMinigameLoops();
+    }
+
+    /* ================= 第一關：確定討論核心 ================= */
+    const judgeData = [
+        { id: 0, text: '推廣產品', correct: true, explanation: '🎯 沒錯！情景明確提到「推廣產品」是活動的兩大任務之一。' },
+        { id: 1, text: '增加員工福利', correct: false, explanation: '💡 題目並未提及員工福利，討論時千萬不要自行聯想、偏離主題喔！' },
+        { id: 2, text: '降低生產成本', correct: false, explanation: '📉 這屬於內部營運範疇，與本次「市場推廣」及「對外慶祝」的目的無關。' },
+        { id: 3, text: '慶祝公司成立 50 週年', correct: true, explanation: '🎯 答對了！這是情景中直接指出的活動核心目標。' },
+        { id: 4, text: '擴大海外市場佔合率', correct: false, explanation: '🌍 公司背景在香港，參考資料也全都是本地活動，並未提及海外市場。' }
+    ];
+    let judgeAnswered = {};
+    const judgeContainer = document.getElementById('judgeContainer');
+    const progressBar = document.getElementById('step1Progress');
+
+    function updateJudgeProgress() {
+        let answeredCount = Object.keys(judgeAnswered).length;
+        progressBar.style.width = ((answeredCount / judgeData.length) * 100) + '%';
+    }
+
+    function renderStep1() {
+        judgeContainer.innerHTML = '';
+        judgeData.forEach(d => {
+            const div = document.createElement('div');
+            div.className = 'judge-item';
+            div.dataset.id = d.id;
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'text';
+            textSpan.textContent = d.text;
+
+            const btnDiv = document.createElement('div');
+            btnDiv.className = 'btns';
+            const btnTrue = document.createElement('button');
+            btnTrue.textContent = '正確';
+            const btnFalse = document.createElement('button');
+            btnFalse.textContent = '錯誤';
+
+            const expDiv = document.createElement('div');
+            expDiv.className = 'explanation';
+            expDiv.innerHTML = d.explanation;
+
+            btnDiv.appendChild(btnTrue);
+            btnDiv.appendChild(btnFalse);
+
+            function handleAnswer(isUserSayingTrue, buttonClicked, evt) {
+                if (judgeAnswered[d.id] !== undefined) return; 
+
+                div.classList.remove('shake-anim', 'pop-anim');
+                void div.offsetWidth;
+
+                const isCorrectAnswer = (d.correct === isUserSayingTrue);
+
+                if (isCorrectAnswer) {
+                    playSound('correct');
+                    addScore('step1', 2, evt);
+                    buttonClicked.classList.add('correct');
+                    btnTrue.disabled = true; btnFalse.disabled = true;
+                    
+                    div.classList.add('pop-anim');
+                    expDiv.classList.add('show', 'correct-exp');
+                    
+                    judgeAnswered[d.id] = true;
+                    updateJudgeProgress();
+                } else {
+                    playSound('wrong');
+                    addScore('step1', -1, evt);
+                    buttonClicked.classList.add('wrong');
+                    div.classList.add('shake-anim');
+                    
+                    expDiv.classList.add('show', 'wrong-exp');
+                    expDiv.innerHTML = "❌ 答錯囉（扣 1 分）！請再試一次。<br>" + d.explanation;
+
+                    setTimeout(() => {
+                        buttonClicked.classList.remove('wrong');
+                        expDiv.classList.remove('show', 'wrong-exp');
+                        expDiv.innerHTML = d.explanation;
+                    }, 1200);
+                    return;
+                }
+
+                if (judgeData.every(data => judgeAnswered[data.id] === true)) {
+                    document.getElementById('step1Feedback').textContent = '🎉 全部正確！核心目的已掌握！';
+                    document.getElementById('step1Feedback').style.color = '#2E7D32';
+                    document.getElementById('nextToStep2').disabled = false;
+                    setTimeout(() => showModal(1), 500);
+                }
+            }
+
+            btnTrue.addEventListener('click', (e) => handleAnswer(true, btnTrue, e));
+            btnFalse.addEventListener('click', (e) => handleAnswer(false, btnFalse, e));
+
+            div.appendChild(textSpan);
+            div.appendChild(btnDiv);
+            div.appendChild(expDiv);
+            judgeContainer.appendChild(div);
+        });
+    }
+
+    function resetStep1() {
+        judgeAnswered = {};
+        scores.step1 = 0;
+        updateAllScoreUI();
+        updateJudgeProgress();
+        document.getElementById('step1Feedback').textContent = '';
+        document.getElementById('nextToStep2').disabled = true;
+        renderStep1();
+    }
+
+    document.getElementById('retryStep1Btn').addEventListener('click', resetStep1);
+    document.getElementById('nextToStep2').addEventListener('click', () => switchStep(2));
+
+    /* ================= 第二關題庫與三個小遊戲資料分配 ================= */
+    const statementsRaw = [
+        { id: 0, text: '專人導賞：讓公眾深入生產核心，具教育性，強化品牌專業性', activity: 'open', type: '優點' },
+        { id: 1, text: 'DIY體驗：汽水瓶設計，創造個人化紀念品', activity: 'open', type: '優點' },
+        { id: 2, text: '限量紀念品：獨家販售，具收藏價值', activity: 'open', type: '優點' },
+        { id: 3, text: '贈飲：聽完50年歷史再喝，汽水變成「有故事的滋味」，情感連結最深。', activity: 'open', type: '優點' },
+        { id: 4, text: '名額有限（120人/日），受眾狹窄，推廣覆蓋面不足', activity: 'open', type: '缺點' },
+        { id: 6, text: '無即時銷售優惠，產品推廣直接性較弱', activity: 'open', type: '缺點' },
+        { id: 7, text: '魔術表演與攤位遊戲：歡樂氣氛、有趣', activity: 'street', type: '優點' },
+        { id: 8, text: '巨型模型合照：具視覺衝擊，利於社交媒體傳播', activity: 'street', type: '優點' },
+        { id: 9, text: '即場優惠：6折特賣，直接刺激銷售', activity: 'street', type: '優點' },
+        { id: 10, text: '派發紀念品、贈飲：讓遊客體驗味道，記住品牌，轉化為潛在消費者', activity: 'street', type: '優點' },
+        { id: 11, text: '活動形式較常見，缺乏獨特記憶點', activity: 'street', type: '缺點' },
+        { id: 12, text: '成本中等（$60,000），但無後續延續性', activity: 'street', type: '缺點' },
+        { id: 13, text: '天氣因素影響大（戶外）', activity: 'street', type: '缺點' },
+        { id: 14, text: '高額獎金：吸引參賽者及媒體關注', activity: 'drink', type: '優點' },
+        { id: 15, text: '競技元素：比賽性質，緊張刺激，具觀賞性', activity: 'drink', type: '優點' },
+        { id: 16, text: '表演嘉賓+直播：娛樂性強', activity: 'drink', type: '優點' },
+        { id: 17, text: '初賽+決賽：延續話題熱度', activity: 'drink', type: '優點' },
+        { id: 18, text: '參賽者僅20人，焦點過度集中於少數人', activity: 'drink', type: '缺點' },
+        { id: 19, text: '競飲可能有健康疑慮，引發負面觀感', activity: 'drink', type: '缺點' },
+        { id: 20, text: '籌備複雜（初賽、嘉賓、直播）', activity: 'drink', type: '缺點' }
+    ];
+
+    const ACTIVITY_OPTIONS = [
+        { code: 'open', name: '汽水廠開放日', icon: '🏭' },
+        { code: 'street', name: '街頭同樂日', icon: '🎪' },
+        { code: 'drink', name: '汽水競飲大賽', icon: '🏆' }
+    ];
+
+    function isActivityMatch(item, chosenAct) {
+        if (item.id === 13) return chosenAct === 'street' || chosenAct === 'drink';
+        if (item.id === 6) return chosenAct === 'open' || chosenAct === 'drink';
+        return chosenAct === item.activity;
+    }
+
+    let mg1Pool = []; // 8 題
+    let mg2Pool = []; // 7 題 (優點)
+    let mg3Pool = []; // 6 題 (缺點)
+
+    let mg1Done = false, mg2Done = false, mg3Done = false;
+    let currentMgTab = 1;
+
+    function buildStep2Pools() {
+        const pros = shuffleArray(statementsRaw.filter(s => s.type === '優點'));
+        const cons = shuffleArray(statementsRaw.filter(s => s.type === '缺點'));
+
+        mg2Pool = pros.slice(0, 7);
+        mg3Pool = cons.slice(0, 6);
+        mg1Pool = shuffleArray([...pros.slice(7, 12), ...cons.slice(6, 8), cons[0]]);
+    }
+
+    function updateMgTabStatus() {
+        const t1 = document.getElementById('mgTab1');
+        const t2 = document.getElementById('mgTab2');
+        const t3 = document.getElementById('mgTab3');
+
+        t1.textContent = `🕹️ 遊戲一：坦克大戰 (${mg1Done ? 8 : mg1Index}/8)`;
+        t2.textContent = `🫧 遊戲二：泡泡龍優點 (${mg2Done ? 7 : mg2Index}/7)`;
+        t3.textContent = `🔨 遊戲三：打地鼠找缺點 (${mg3Done ? 6 : mg3Index}/6)`;
+
+        t1.classList.toggle('done', mg1Done);
+        t2.classList.toggle('done', mg2Done);
+        t3.classList.toggle('done', mg3Done);
+
+        if (mg1Done && mg2Done && mg3Done) {
+            document.getElementById('step2Feedback').textContent = '🎉 恭喜！三個優缺點小遊戲全數通關！';
+            document.getElementById('step2Feedback').style.color = '#2E7D32';
+            document.getElementById('nextToStep3').disabled = false;
+            showModal(2);
+        }
+    }
+
+    function switchMgTab(tabNum) {
+        currentMgTab = tabNum;
+        document.querySelectorAll('.mg-tab').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.mg) === tabNum);
+        });
+        document.querySelectorAll('.mg-panel').forEach((panel, idx) => {
+            panel.classList.toggle('active', idx === tabNum - 1);
+        });
+        setTimeout(updateCanvasScalers, 30);
+        syncActiveMinigameLoops();
+    }
+
+    document.querySelectorAll('.mg-tab').forEach(btn => {
+        btn.addEventListener('click', () => switchMgTab(parseInt(btn.dataset.mg)));
+    });
+
+    /* -------- 遊戲一：紅白機坦克迷宮大戰 (8題 - 紅磚牆障礙物 + 區域內尋寶射擊) -------- */
+    let mg1Index = 0;
+    let mg1Phase = 1;
+    let tankX = 256, tankY = 290;
+    let tankDir = 'up';
+    const TANK_SIZE = 38;
+    let tankBusy = false;
+    const tankMap = document.getElementById('tankMap');
+    let playerTankEl = null;
+
+    const TANK_WALLS = [
+        { x: 105, y: 78, w: 105, h: 26 },
+        { x: 340, y: 78, w: 105, h: 26 },
+        { x: 222, y: 168, w: 106, h: 26 },
+        { x: 75,  y: 165, w: 26,  h: 92 },
+        { x: 448, y: 165, w: 26,  h: 92 },
+        { x: 165, y: 252, w: 68,  h: 24 },
+        { x: 318, y: 252, w: 68,  h: 24 }
+    ];
+
+    const TANK_TARGET_SPOTS = [
+        { x: 14,  y: 12,  w: 118, h: 48 },
+        { x: 216, y: 12,  w: 118, h: 48 },
+        { x: 418, y: 12,  w: 118, h: 48 },
+        { x: 112, y: 114, w: 100, h: 46 },
+        { x: 338, y: 114, w: 100, h: 46 },
+        { x: 14,  y: 286, w: 120, h: 46 },
+        { x: 416, y: 286, w: 120, h: 46 }
+    ];
+
+    function rectsOverlap(a, b) {
+        return (
+            a.x < b.x + b.w &&
+            a.x + a.w > b.x &&
+            a.y < b.y + b.h &&
+            a.y + a.h > b.y
+        );
+    }
+
+    function renderTankStage() {
+        tankMap.innerHTML = '';
+
+        if (mg1Index >= mg1Pool.length) {
+            mg1Done = true;
+            updateMgTabStatus();
+            document.getElementById('tankQuestionText').textContent = '🎖️ 坦克大戰 8 題全數完成！請切換至「遊戲二：泡泡龍優點」繼續挑戰！';
+            document.getElementById('tankPhaseTag').textContent = 'MISSION COMPLETE';
+            return;
+        }
+
+        const q = mg1Pool[mg1Index];
+        document.getElementById('tankProgressText').textContent = `第 ${mg1Index + 1} / ${mg1Pool.length} 題`;
+        document.getElementById('tankQuestionText').textContent = q.text;
+
+        TANK_WALLS.forEach(w => {
+            const wallEl = document.createElement('div');
+            wallEl.className = 'brick-wall';
+            wallEl.style.left = w.x + 'px';
+            wallEl.style.top = w.y + 'px';
+            wallEl.style.width = w.w + 'px';
+            wallEl.style.height = w.h + 'px';
+            tankMap.appendChild(wallEl);
+        });
+
+        const spots = shuffleArray(TANK_TARGET_SPOTS);
+
+        if (mg1Phase === 1) {
+            document.getElementById('tankPhaseTag').textContent = '步驟一 (1/2)：操控坦克繞過紅磚牆，找到所屬「活動基地」並對準發射！';
+            ACTIVITY_OPTIONS.forEach((act, idx) => {
+                const sp = spots[idx];
+                const base = document.createElement('div');
+                base.className = 'tank-base-target';
+                base.style.left = sp.x + 'px';
+                base.style.top = sp.y + 'px';
+                base.style.width = sp.w + 'px';
+                base.style.height = sp.h + 'px';
+                base.dataset.code = act.code;
+                base.dataset.x = sp.x;
+                base.dataset.y = sp.y;
+                base.dataset.w = sp.w;
+                base.dataset.h = sp.h;
+                base.innerHTML = `<span class="base-icon">${act.icon}</span><span>${act.name}</span>`;
+                tankMap.appendChild(base);
+            });
+        } else {
+            document.getElementById('tankPhaseTag').textContent = '步驟二 (2/2)：活動正確！現在請移動坦克找到「優點」或「缺點」目標並開火！';
+            const typeTargets = [
+                { code: '優點', icon: '✅' },
+                { code: '缺點', icon: '❌' }
+            ];
+            typeTargets.forEach((t, idx) => {
+                const sp = spots[idx];
+                const base = document.createElement('div');
+                base.className = 'tank-base-target';
+                base.style.left = sp.x + 'px';
+                base.style.top = sp.y + 'px';
+                base.style.width = sp.w + 'px';
+                base.style.height = sp.h + 'px';
+                base.dataset.code = t.code;
+                base.dataset.x = sp.x;
+                base.dataset.y = sp.y;
+                base.dataset.w = sp.w;
+                base.dataset.h = sp.h;
+                base.innerHTML = `<span class="base-icon">${t.icon}</span><span>這是「${t.code}」</span>`;
+                tankMap.appendChild(base);
+            });
+        }
+
+        playerTankEl = document.createElement('div');
+        playerTankEl.className = 'player-tank';
+        playerTankEl.innerHTML = `
+            <div class="tank-body-chassis">
+                <div class="tank-turret-cap">
+                    <div class="tank-barrel"></div>
+                </div>
+            </div>
+        `;
+        tankMap.appendChild(playerTankEl);
+        updateTankPosition();
+        updateCanvasScalers();
+    }
+
+    function updateTankPosition() {
+        if (!playerTankEl) return;
+        playerTankEl.style.left = tankX + 'px';
+        playerTankEl.style.top = tankY + 'px';
+
+        let deg = 0;
+        if (tankDir === 'up') deg = 0;
+        else if (tankDir === 'right') deg = 90;
+        else if (tankDir === 'down') deg = 180;
+        else if (tankDir === 'left') deg = -90;
+        playerTankEl.style.transform = `rotate(${deg}deg)`;
+    }
+
+    function moveTank(dx, dy, newDir) {
+        if (tankBusy || mg1Done) return;
+        if (newDir) tankDir = newDir;
+        playSound('tankMove');
+
+        const mapW = 550 - TANK_SIZE - 4;
+        const mapH = 340 - TANK_SIZE - 4;
+
+        let candX = Math.max(4, Math.min(mapW, tankX + dx));
+        let candY = Math.max(4, Math.min(mapH, tankY + dy));
+
+        const tankBox = { x: candX, y: candY, w: TANK_SIZE, h: TANK_SIZE };
+        const hitWall = TANK_WALLS.some(w => rectsOverlap(tankBox, w));
+
+        if (!hitWall) {
+            tankX = candX;
+            tankY = candY;
+        } else {
+            document.getElementById('tankFeedback').textContent = '🧱 前方有紅磚牆阻擋！請操控方向鍵繞道前進！';
+            document.getElementById('tankFeedback').style.color = '#FFAB91';
+        }
+        updateTankPosition();
+    }
+
+    function fireTankBullet(evt) {
+        if (tankBusy || mg1Done || mg1Index >= mg1Pool.length) return;
+        tankBusy = true;
+        playSound('tankFire');
+
+        const bullet = document.createElement('div');
+        bullet.className = 'tank-bullet';
+        let bx = tankX + TANK_SIZE / 2 - 4;
+        let by = tankY + TANK_SIZE / 2 - 4;
+
+        let vx = 0, vy = 0;
+        const speed = 13;
+        if (tankDir === 'up') { vy = -speed; by -= 18; }
+        else if (tankDir === 'down') { vy = speed; by += 18; }
+        else if (tankDir === 'left') { vx = -speed; bx -= 18; }
+        else if (tankDir === 'right') { vx = speed; bx += 18; }
+
+        bullet.style.left = bx + 'px';
+        bullet.style.top = by + 'px';
+        tankMap.appendChild(bullet);
+
+        const bases = Array.from(tankMap.querySelectorAll('.tank-base-target'));
+        const wallEls = Array.from(tankMap.querySelectorAll('.brick-wall'));
+
+        const interval = setInterval(() => {
+            bx += vx;
+            by += vy;
+            bullet.style.left = bx + 'px';
+            bullet.style.top = by + 'px';
+
+            const bRect = { x: bx, y: by, w: 8, h: 8 };
+
+            if (bx < 0 || bx > 550 || by < 0 || by > 340) {
+                clearInterval(interval);
+                bullet.remove();
+                document.getElementById('tankFeedback').textContent = '💨 砲彈打空了！請移動坦克對準答案基地再發射！';
+                document.getElementById('tankFeedback').style.color = '#FFD600';
+                tankBusy = false;
+                return;
+            }
+
+            for (let i = 0; i < TANK_WALLS.length; i++) {
+                if (rectsOverlap(bRect, TANK_WALLS[i])) {
+                    clearInterval(interval);
+                    bullet.remove();
+                    playSound('brickHit');
+                    if (wallEls[i]) {
+                        wallEls[i].classList.add('wall-hit-flash');
+                        setTimeout(() => wallEls[i].classList.remove('wall-hit-flash'), 180);
+                    }
+                    document.getElementById('tankFeedback').textContent = '🧱 砲彈被紅磚牆擋住了！請駕駛坦克繞過紅牆再射擊目標！';
+                    document.getElementById('tankFeedback').style.color = '#FFAB91';
+                    tankBusy = false;
+                    return;
+                }
+            }
+
+            let hitBase = null;
+            for (const b of bases) {
+                const targetRect = {
+                    x: parseFloat(b.dataset.x),
+                    y: parseFloat(b.dataset.y),
+                    w: parseFloat(b.dataset.w),
+                    h: parseFloat(b.dataset.h)
+                };
+                if (rectsOverlap(bRect, targetRect)) {
+                    hitBase = b;
+                    break;
+                }
+            }
+
+            if (hitBase) {
+                clearInterval(interval);
+                bullet.remove();
+
+                const q = mg1Pool[mg1Index];
+                const chosen = hitBase.dataset.code;
+
+                if (mg1Phase === 1) {
+                    if (isActivityMatch(q, chosen)) {
+                        playSound('correct');
+                        hitBase.classList.add('hit-ok');
+                        document.getElementById('tankFeedback').textContent = '🎯 成功鎖定活動！現在請在戰場中尋找「優點」或「缺點」目標並射擊！';
+                        document.getElementById('tankFeedback').style.color = '#00E676';
+                        setTimeout(() => {
+                            mg1Phase = 2;
+                            tankBusy = false;
+                            renderTankStage();
+                        }, 650);
+                    } else {
+                        playSound('wrong');
+                        addScore('mg1', -1, evt);
+                        hitBase.classList.add('hit-bad');
+                        document.getElementById('tankFeedback').textContent = '💥 射錯活動基地了（扣 1 分）！請駕駛坦克尋找正確的活動基地！';
+                        document.getElementById('tankFeedback').style.color = '#FF5252';
+                        setTimeout(() => {
+                            hitBase.classList.remove('hit-bad');
+                            tankBusy = false;
+                        }, 600);
+                    }
+                } else {
+                    if (chosen === q.type) {
+                        playSound('correct');
+                        addScore('mg1', 2, evt);
+                        hitBase.classList.add('hit-ok');
+                        document.getElementById('tankFeedback').textContent = '🏆 完美擊破目標！（+2 分）進入下一題！';
+                        document.getElementById('tankFeedback').style.color = '#00E676';
+                        setTimeout(() => {
+                            mg1Index++;
+                            mg1Phase = 1;
+                            tankX = 256; tankY = 290; tankDir = 'up';
+                            tankBusy = false;
+                            updateMgTabStatus();
+                            renderTankStage();
+                        }, 750);
+                    } else {
+                        playSound('wrong');
+                        addScore('mg1', -1, evt);
+                        hitBase.classList.add('hit-bad');
+                        document.getElementById('tankFeedback').textContent = '💥 優缺點判斷錯誤（扣 1 分）！請瞄準另一個目標！';
+                        document.getElementById('tankFeedback').style.color = '#FF5252';
+                        setTimeout(() => {
+                            hitBase.classList.remove('hit-bad');
+                            tankBusy = false;
+                        }, 600);
+                    }
+                }
+            }
+        }, 22);
+    }
+
+    // 支援手機與電腦按住方向鍵連續移動 (統一使用 Pointer Events 避免手機雙重觸發)
+    function bindHoldButton(btnEl, actionFn) {
+        let holdTimer = null;
+        const startHold = (e) => {
+            e.preventDefault();
+            actionFn();
+            clearInterval(holdTimer);
+            holdTimer = setInterval(actionFn, 85);
+        };
+        const stopHold = () => {
+            clearInterval(holdTimer);
+            holdTimer = null;
+        };
+        btnEl.addEventListener('pointerdown', startHold);
+        btnEl.addEventListener('pointerup', stopHold);
+        btnEl.addEventListener('pointerleave', stopHold);
+        btnEl.addEventListener('pointercancel', stopHold);
+    }
+
+    bindHoldButton(document.getElementById('tankUpBtn'), () => moveTank(0, -18, 'up'));
+    bindHoldButton(document.getElementById('tankDownBtn'), () => moveTank(0, 18, 'down'));
+    bindHoldButton(document.getElementById('tankLeftBtn'), () => moveTank(-18, 0, 'left'));
+    bindHoldButton(document.getElementById('tankRightBtn'), () => moveTank(18, 0, 'right'));
+    document.getElementById('tankFireBtn').addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        fireTankBullet(e);
+    });
+
+    function resetMg1() {
+        scores.mg1 = 0;
+        mg1Index = 0;
+        mg1Phase = 1;
+        mg1Done = false;
+        tankBusy = false;
+        tankX = 256; tankY = 290; tankDir = 'up';
+        mg1Pool = shuffleArray(mg1Pool);
+        document.getElementById('tankFeedback').textContent = '🕹️ 請用上下左右鍵操控坦克繞過紅磚牆，找到答案基地後按「發射砲彈」！';
+        document.getElementById('tankFeedback').style.color = '#FFD600';
+        updateAllScoreUI();
+        updateMgTabStatus();
+        renderTankStage();
+    }
+
+    /* -------- 遊戲二：街機《泡泡龍》動態掉落泡泡版 (7題優點) -------- */
+    let mg2Index = 0;
+    let pbBusy = false;
+    let pbCrossX = 275, pbCrossY = 160;
+    let fallingBubbles = [];
+    let pbPhysicsTimer = null;
+    let pbSpawnCounter = 0;
+    let pbNextActIdx = 0;
+
+    const pbPlayfield = document.getElementById('pbPlayfield');
+    const pbStickShaft = document.getElementById('pbStickShaft');
+
+    function renderBubbleStage() {
+        pbPlayfield.innerHTML = '';
+        fallingBubbles = [];
+
+        if (mg2Index >= mg2Pool.length) {
+            mg2Done = true;
+            stopBubbleLoop();
+            updateMgTabStatus();
+            document.getElementById('bubbleQuestionText').textContent = '🎉 泡泡龍 7 題優點全數破關！請切換至「遊戲三：打地鼠找缺點」！';
+            document.getElementById('bubbleFeedback').textContent = 'STAGE CLEAR! 恭喜完成泡泡龍挑戰！';
+            return;
+        }
+
+        const q = mg2Pool[mg2Index];
+        document.getElementById('bubbleProgressText').textContent = `ROUND ${mg2Index + 1} / ${mg2Pool.length}`;
+        document.getElementById('bubbleQuestionText').textContent = `✨ 優點句子：「${q.text}」`;
+
+        const cross = document.createElement('div');
+        cross.className = 'pb-crosshair';
+        cross.id = 'pbCrosshair';
+        pbPlayfield.appendChild(cross);
+
+        const bottomLine = document.createElement('div');
+        bottomLine.className = 'pb-Bottom-line';
+        pbPlayfield.appendChild(bottomLine);
+
+        const launcher = document.createElement('div');
+        launcher.className = 'pb-launcher-zone';
+        launcher.innerHTML = `
+            <div class="pb-dragon-left">🦖</div>
+            <div class="pb-turret-wheel">
+                <div class="pb-aim-arrow" id="pbAimArrow"></div>
+                <div class="pb-loaded-bubble b-blu" id="pbLoadedBubble"></div>
+            </div>
+            <div class="pb-dragon-right">🦕</div>
+        `;
+        pbPlayfield.appendChild(launcher);
+
+        updatePbCrosshairUI();
+        updateCanvasScalers();
+
+        spawnSingleFallingBubble(30);
+        spawnSingleFallingBubble(-35);
+    }
+
+    function updatePbCrosshairUI() {
+        const cross = document.getElementById('pbCrosshair');
+        if (cross) {
+            cross.style.left = pbCrossX + 'px';
+            cross.style.top = pbCrossY + 'px';
+        }
+        const arrow = document.getElementById('pbAimArrow');
+        if (arrow) {
+            const dx = pbCrossX - 275;
+            const dy = 320 - pbCrossY;
+            const angleDeg = Math.atan2(dx, Math.max(30, dy)) * (180 / Math.PI);
+            arrow.style.transform = `translateX(-50%) rotate(${angleDeg}deg)`;
+        }
+    }
+
+    function movePbCrosshair(dx, dy) {
+        if (mg2Done) return;
+        playSound('aimTick');
+        pbCrossX = Math.max(48, Math.min(490, pbCrossX + dx));
+        pbCrossY = Math.max(45, Math.min(265, pbCrossY + dy));
+        updatePbCrosshairUI();
+
+        if (pbStickShaft) {
+            let rot = 0;
+            if (dx < 0) rot = -22;
+            else if (dx > 0) rot = 22;
+            else if (dy < 0) rot = -10;
+            else if (dy > 0) rot = 10;
+            pbStickShaft.style.transform = `rotate(${rot}deg)`;
+            setTimeout(() => {
+                if (pbStickShaft) pbStickShaft.style.transform = 'rotate(0deg)';
+            }, 120);
+        }
+    }
+
+    function spawnSingleFallingBubble(initialY = -80) {
+        if (mg2Done || mg2Index >= mg2Pool.length) return;
+        if (fallingBubbles.length >= 5) return;
+
+        const act = ACTIVITY_OPTIONS[pbNextActIdx % ACTIVITY_OPTIONS.length];
+        pbNextActIdx++;
+
+        const colorClasses = ['b-red', 'b-blu', 'b-grn', 'b-pur', 'b-yel'];
+        const colorCls = colorClasses[Math.floor(Math.random() * colorClasses.length)];
+
+        const lanes = [30, 145, 260, 380];
+        const baseX = lanes[Math.floor(Math.random() * lanes.length)] + (Math.random() * 24 - 12);
+
+        const el = document.createElement('div');
+        el.className = `falling-answer-bubble ${colorCls}`;
+        el.innerHTML = `<div class="b-icon">${act.icon}</div><div class="b-text">${act.name}</div>`;
+
+        const bubbleObj = {
+            id: Date.now() + Math.random(),
+            el: el,
+            act: act,
+            baseX: baseX,
+            x: baseX,
+            y: initialY,
+            vy: 1.05 + Math.random() * 0.45,
+            swayPhase: Math.random() * Math.PI * 2,
+            swaySpeed: 0.04 + Math.random() * 0.02,
+            scale: 1,
+            popping: false
+        };
+
+        el.style.left = bubbleObj.x + 'px';
+        el.style.top = bubbleObj.y + 'px';
+
+        // 使用 pointerdown 讓手機點擊掉落中泡泡瞬間反應
+        el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (pbBusy || mg2Done || bubbleObj.popping) return;
+            pbCrossX = bubbleObj.x + 48;
+            pbCrossY = bubbleObj.y + 48;
+            updatePbCrosshairUI();
+            shootBubbleAtTarget(bubbleObj, e);
+        });
+
+        pbPlayfield.appendChild(el);
+        fallingBubbles.push(bubbleObj);
+    }
+
+    function updateFallingBubblesTick() {
+        if (mg2Done || currentStep !== 2 || currentMgTab !== 2) return;
+
+        pbSpawnCounter++;
+        if (pbSpawnCounter >= 34) {
+            pbSpawnCounter = 0;
+            spawnSingleFallingBubble(-85);
+        }
+
+        for (let i = fallingBubbles.length - 1; i >= 0; i--) {
+            const b = fallingBubbles[i];
+            if (b.popping) continue;
+
+            b.y += b.vy;
+            b.swayPhase += b.swaySpeed;
+            b.x = Math.max(12, Math.min(435, b.baseX + Math.sin(b.swayPhase) * 16));
+
+            b.el.style.left = b.x + 'px';
+            b.el.style.top = b.y + 'px';
+
+            if (b.y > 265) {
+                b.popping = true;
+                b.el.style.opacity = '0';
+                b.el.style.transform = 'scale(0.3)';
+                setTimeout(() => {
+                    b.el.remove();
+                }, 220);
+                fallingBubbles.splice(i, 1);
+            }
+        }
+    }
+
+    function startBubbleLoop() {
+        if (pbPhysicsTimer || mg2Done) return;
+        pbPhysicsTimer = setInterval(updateFallingBubblesTick, 30);
+    }
+
+    function stopBubbleLoop() {
+        if (pbPhysicsTimer) {
+            clearInterval(pbPhysicsTimer);
+            pbPhysicsTimer = null;
+        }
+    }
+
+    function shootBubbleAtTarget(targetBubbleObj, evt) {
+        if (pbBusy || mg2Done || mg2Index >= mg2Pool.length) return;
+
+        let hitBubble = targetBubbleObj;
+        if (!hitBubble) {
+            let bestDist = 9999;
+            fallingBubbles.forEach(b => {
+                if (b.popping) return;
+                const cx = b.x + 48;
+                const cy = b.y + 48;
+                const dist = Math.hypot(cx - pbCrossX, cy - pbCrossY);
+                const hitRadius = 58 * b.scale;
+                if (dist <= hitRadius && dist < bestDist) {
+                    bestDist = dist;
+                    hitBubble = b;
+                }
+            });
+        }
+
+        playSound('bubbleLaunch');
+
+        const flyB = document.createElement('div');
+        flyB.className = 'pb-flying-bubble b-blu';
+        const startX = 259, startY = 295;
+        const destX = hitBubble ? (hitBubble.x + 32) : (pbCrossX - 16);
+        const destY = hitBubble ? (hitBubble.y + 32) : (pbCrossY - 16);
+
+        flyB.style.left = startX + 'px';
+        flyB.style.top = startY + 'px';
+        pbPlayfield.appendChild(flyB);
+
+        let step = 0;
+        const maxSteps = 8;
+        pbBusy = true;
+
+        const shotTimer = setInterval(() => {
+            step++;
+            const p = step / maxSteps;
+            flyB.style.left = (startX + (destX - startX) * p) + 'px';
+            flyB.style.top = (startY + (destY - startY) * p) + 'px';
+
+            if (step >= maxSteps) {
+                clearInterval(shotTimer);
+                flyB.remove();
+
+                if (!hitBubble || hitBubble.popping) {
+                    document.getElementById('bubbleFeedback').textContent = '💨 沒打中掉落的泡泡！請直接點擊泡泡，或移動準星對準泡泡再按射擊！';
+                    document.getElementById('bubbleFeedback').style.color = '#FFFF8D';
+                    pbBusy = false;
+                    return;
+                }
+
+                const q = mg2Pool[mg2Index];
+                if (isActivityMatch(q, hitBubble.act.code)) {
+                    hitBubble.popping = true;
+                    playSound('bubbleClusterPop');
+                    setTimeout(() => playSound('correct'), 130);
+                    addScore('mg2', 2, evt);
+
+                    hitBubble.el.classList.add('bubble-burst-ok');
+                    document.getElementById('bubbleFeedback').textContent = `🫧 啵！答對了！「${hitBubble.act.name}」泡泡爆開！（+2 分）`;
+                    document.getElementById('bubbleFeedback').style.color = '#00E676';
+
+                    setTimeout(() => {
+                        mg2Index++;
+                        pbBusy = false;
+                        updateMgTabStatus();
+                        renderBubbleStage();
+                    }, 680);
+                } else {
+                    playSound('bubbleInflate');
+                    setTimeout(() => playSound('wrong'), 120);
+                    addScore('mg2', -1, evt);
+
+                    hitBubble.scale = Math.min(2.1, hitBubble.scale + 0.42);
+                    hitBubble.el.classList.add('bubble-wrong-inflated');
+                    hitBubble.el.style.transform = `scale(${hitBubble.scale})`;
+                    document.getElementById('bubbleFeedback').textContent = `🎈 哎呀！射錯了，「${hitBubble.act.name}」泡泡變大了（扣 1 分）！快找正確的泡泡！`;
+                    document.getElementById('bubbleFeedback').style.color = '#FF80AB';
+                    pbBusy = false;
+                }
+            }
+        }, 20);
+    }
+
+    bindHoldButton(document.getElementById('pbJoyUpBtn'), () => movePbCrosshair(0, -24));
+    bindHoldButton(document.getElementById('pbJoyDownBtn'), () => movePbCrosshair(0, 24));
+    bindHoldButton(document.getElementById('pbJoyLeftBtn'), () => movePbCrosshair(-28, 0));
+    bindHoldButton(document.getElementById('pbJoyRightBtn'), () => movePbCrosshair(28, 0));
+
+    ['pbShootBtn1', 'pbShootBtn2', 'pbShootBtn3'].forEach(id => {
+        document.getElementById(id).addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            shootBubbleAtTarget(null, e);
+        });
+    });
+
+    function resetMg2() {
+        stopBubbleLoop();
+        scores.mg2 = 0;
+        mg2Index = 0;
+        mg2Done = false;
+        pbBusy = false;
+        pbCrossX = 275; pbCrossY = 160;
+        mg2Pool = shuffleArray(mg2Pool);
+        document.getElementById('bubbleFeedback').textContent = '🫧 直接點擊掉下的答案泡泡，或用上下左右搖桿瞄準後按「射擊」！';
+        document.getElementById('bubbleFeedback').style.color = '#FFF';
+        updateAllScoreUI();
+        updateMgTabStatus();
+        renderBubbleStage();
+        syncActiveMinigameLoops();
+    }
+
+    /* -------- 遊戲三：經典《打地鼠》樣式 (6題缺點，參考 mole.jpg) -------- */
+    let mg3Index = 0;
+    let moleCursor = 0;
+    let moleLoopTimer = null;
+    let moleSlotsState = [];
+    let moleBusy = false;
+    const moleHolesGrid = document.getElementById('moleHolesGrid');
+
+    function buildMoleHolesDOM() {
+        moleHolesGrid.innerHTML = '';
+        moleSlotsState = [];
+
+        for (let i = 0; i < 6; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'mole-hole-slot' + (i === moleCursor ? ' cursor-active' : '');
+            slot.dataset.index = i;
+
+            slot.innerHTML = `
+                <div class="hit-burst-star"></div>
+                <div class="mole-hammer-fx">
+                    <div class="hammer-head"><div class="hammer-band"></div></div>
+                    <div class="hammer-handle"></div>
+                </div>
+                <div class="mole-clip-box">
+                    <div class="mole-character">
+                        <div class="mole-sign">汽水廠開放日</div>
+                        <div class="mole-face">
+                            <span class="mole-eye left">•</span>
+                            <span class="mole-eye right">•</span>
+                            <div class="mole-whiskers left"><span></span><span></span><span></span></div>
+                            <div class="mole-whiskers right"><span></span><span></span><span></span></div>
+                            <div class="mole-snout"><div class="mole-nose-dot"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hole-oval"></div>
+            `;
+
+            // 使用 pointerdown 讓手機點擊地鼠零延遲敲擊
+            slot.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                moleCursor = i;
+                updateMoleCursorUI();
+                whackMoleAt(i, e);
+            });
+
+            moleHolesGrid.appendChild(slot);
+            moleSlotsState.push({
+                up: false,
+                actCode: null,
+                actName: '',
+                hideTimeout: null,
+                slotEl: slot,
+                charEl: slot.querySelector('.mole-character'),
+                signEl: slot.querySelector('.mole-sign'),
+                eyeLeft: slot.querySelector('.mole-eye.left'),
+                eyeRight: slot.querySelector('.mole-eye.right'),
+                hammerEl: slot.querySelector('.mole-hammer-fx'),
+                burstEl: slot.querySelector('.hit-burst-star')
+            });
+        }
+    }
+
+    function updateMoleCursorUI() {
+        moleSlotsState.forEach((st, idx) => {
+            st.slotEl.classList.toggle('cursor-active', idx === moleCursor);
+        });
+    }
+
+    function moveMoleCursor(dir) {
+        if (mg3Done) return;
+        playSound('aimTick');
+        if (dir === 'left') moleCursor = (moleCursor + 5) % 6;
+        else if (dir === 'right') moleCursor = (moleCursor + 1) % 6;
+        else if (dir === 'up') moleCursor = moleCursor >= 3 ? moleCursor - 3 : moleCursor + 3;
+        else if (dir === 'down') moleCursor = moleCursor < 3 ? moleCursor + 3 : moleCursor - 3;
+        updateMoleCursorUI();
+    }
+
+    function renderMoleQuestion() {
+        if (mg3Index >= mg3Pool.length) {
+            mg3Done = true;
+            stopMoleWaveLoop();
+            moleSlotsState.forEach(st => hideMoleInSlot(st));
+            updateMgTabStatus();
+            document.getElementById('moleQuestionText').textContent = '🎉 打地鼠 6 題缺點全數過關！';
+            document.getElementById('moleFeedback').textContent = '🏆 恭喜完成所有打地鼠挑戰！';
+            return;
+        }
+        const q = mg3Pool[mg3Index];
+        document.getElementById('moleProgressText').textContent = `第 ${mg3Index + 1} / ${mg3Pool.length} 題`;
+        document.getElementById('moleQuestionText').textContent = `⚠️ 缺點句子：「${q.text}」`;
+    }
+
+    function popUpMoleInSlot(slotIdx, actObj, stayDuration) {
+        const st = moleSlotsState[slotIdx];
+        if (!st || st.up || mg3Done) return;
+
+        st.up = true;
+        st.actCode = actObj.code;
+        st.actName = actObj.name;
+        st.signEl.textContent = `${actObj.icon} ${actObj.name}`;
+        st.eyeLeft.textContent = '•';
+        st.eyeRight.textContent = '•';
+        st.charEl.classList.add('up');
+
+        if (currentStep === 2 && currentMgTab === 3) {
+            playSound('molePop');
+        }
+
+        clearTimeout(st.hideTimeout);
+        st.hideTimeout = setTimeout(() => {
+            hideMoleInSlot(st);
+        }, stayDuration);
+    }
+
+    function hideMoleInSlot(st) {
+        if (!st) return;
+        clearTimeout(st.hideTimeout);
+        st.up = false;
+        st.actCode = null;
+        st.charEl.classList.remove('up');
+    }
+
+    function spawnMoleWave() {
+        if (mg3Done || moleBusy || currentStep !== 2 || currentMgTab !== 3) return;
+
+        const downIndices = moleSlotsState
+            .map((st, idx) => (!st.up ? idx : -1))
+            .filter(idx => idx !== -1);
+
+        if (downIndices.length === 0) return;
+
+        const chosenHoles = shuffleArray(downIndices).slice(0, 2);
+        const shuffledActs = shuffleArray(ACTIVITY_OPTIONS);
+
+        popUpMoleInSlot(chosenHoles[0], shuffledActs[0], 2100);
+        if (chosenHoles.length > 1) {
+            setTimeout(() => {
+                if (!mg3Done && !moleBusy && currentStep === 2 && currentMgTab === 3) {
+                    popUpMoleInSlot(chosenHoles[1], shuffledActs[1], 2100);
+                }
+            }, 380);
+        }
+    }
+
+    function startMoleWaveLoop() {
+        if (moleLoopTimer || mg3Done) return;
+        spawnMoleWave();
+        moleLoopTimer = setInterval(spawnMoleWave, 1550);
+    }
+
+    function stopMoleWaveLoop() {
+        if (moleLoopTimer) {
+            clearInterval(moleLoopTimer);
+            moleLoopTimer = null;
+        }
+    }
+
+    function syncActiveMinigameLoops() {
+        if (currentStep === 2 && currentMgTab === 2 && !mg2Done) {
+            startBubbleLoop();
+        } else {
+            stopBubbleLoop();
+        }
+        if (currentStep === 2 && currentMgTab === 3 && !mg3Done) {
+            startMoleWaveLoop();
+        } else {
+            stopMoleWaveLoop();
+        }
+    }
+
+    function whackMoleAt(slotIdx, evt) {
+        if (moleBusy || mg3Done || mg3Index >= mg3Pool.length) return;
+        const st = moleSlotsState[slotIdx];
+        if (!st) return;
+
+        st.hammerEl.classList.add('swing');
+        setTimeout(() => st.hammerEl.classList.remove('swing'), 260);
+
+        if (!st.up || !st.actCode) {
+            playSound('hammerWhoosh');
+            document.getElementById('moleFeedback').textContent = '💨 敲空了！等頂著正確答案的地鼠冒出來再敲擊！';
+            document.getElementById('moleFeedback').style.color = '#E65100';
+            return;
+        }
+
+        moleBusy = true;
+        playSound('hammerBonk');
+
+        st.eyeLeft.textContent = '>';
+        st.eyeRight.textContent = '<';
+        st.burstEl.classList.add('show');
+        clearTimeout(st.hideTimeout);
+
+        const q = mg3Pool[mg3Index];
+        const hitActCode = st.actCode;
+        const hitActName = st.actName;
+
+        if (isActivityMatch(q, hitActCode)) {
+            setTimeout(() => playSound('correct'), 110);
+            addScore('mg3', 2, evt);
+            document.getElementById('moleFeedback').textContent = `🔨 漂亮擊中「${hitActName}」地鼠！（+2 分）`;
+            document.getElementById('moleFeedback').style.color = '#1B5E20';
+
+            setTimeout(() => {
+                st.burstEl.classList.remove('show');
+                moleSlotsState.forEach(s => hideMoleInSlot(s));
+                mg3Index++;
+                moleBusy = false;
+                updateMgTabStatus();
+                renderMoleQuestion();
+            }, 720);
+        } else {
+            setTimeout(() => playSound('wrong'), 110);
+            addScore('mg3', -1, evt);
+            document.getElementById('moleFeedback').textContent = `❌ 敲錯隻了！這不是「${hitActName}」的缺點（扣 1 分），看準再敲！`;
+            document.getElementById('moleFeedback').style.color = '#C62828';
+
+            setTimeout(() => {
+                st.burstEl.classList.remove('show');
+                hideMoleInSlot(st);
+                moleBusy = false;
+            }, 600);
+        }
+    }
+
+    document.getElementById('moleUpBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); moveMoleCursor('up'); });
+    document.getElementById('moleDownBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); moveMoleCursor('down'); });
+    document.getElementById('moleLeftBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); moveMoleCursor('left'); });
+    document.getElementById('moleRightBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); moveMoleCursor('right'); });
+    document.getElementById('moleWhackBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); whackMoleAt(moleCursor, e); });
+
+    function resetMg3() {
+        stopMoleWaveLoop();
+        scores.mg3 = 0;
+        mg3Index = 0;
+        mg3Done = false;
+        moleBusy = false;
+        moleCursor = 0;
+        mg3Pool = shuffleArray(mg3Pool);
+        buildMoleHolesDOM();
+        renderMoleQuestion();
+        document.getElementById('moleFeedback').textContent = '💡 提示：直接用手指/滑鼠點擊冒出的正確地鼠，或用下方方向鍵瞄準後按「敲擊」！';
+        document.getElementById('moleFeedback').style.color = '#1B5E20';
+        updateAllScoreUI();
+        updateMgTabStatus();
+        syncActiveMinigameLoops();
+    }
+
+    /* -------- 全域鍵盤方向鍵與空白鍵支援 (依目前開啟的小遊戲自動切換) -------- */
+    window.addEventListener('keydown', (e) => {
+        if (currentStep !== 2) return;
+
+        if (currentMgTab === 1 && !mg1Done) {
+            if (['ArrowUp', 'KeyW'].includes(e.code)) { e.preventDefault(); moveTank(0, -18, 'up'); }
+            else if (['ArrowDown', 'KeyS'].includes(e.code)) { e.preventDefault(); moveTank(0, 18, 'down'); }
+            else if (['ArrowLeft', 'KeyA'].includes(e.code)) { e.preventDefault(); moveTank(-18, 0, 'left'); }
+            else if (['ArrowRight', 'KeyD'].includes(e.code)) { e.preventDefault(); moveTank(18, 0, 'right'); }
+            else if (e.code === 'Space') { e.preventDefault(); fireTankBullet(); }
+        } else if (currentMgTab === 2 && !mg2Done) {
+            if (['ArrowUp', 'KeyW'].includes(e.code)) { e.preventDefault(); movePbCrosshair(0, -24); }
+            else if (['ArrowDown', 'KeyS'].includes(e.code)) { e.preventDefault(); movePbCrosshair(0, 24); }
+            else if (['ArrowLeft', 'KeyA'].includes(e.code)) { e.preventDefault(); movePbCrosshair(-28, 0); }
+            else if (['ArrowRight', 'KeyD'].includes(e.code)) { e.preventDefault(); movePbCrosshair(28, 0); }
+            else if (e.code === 'Space') { e.preventDefault(); shootBubbleAtTarget(null); }
+        } else if (currentMgTab === 3 && !mg3Done) {
+            if (['ArrowUp', 'KeyW'].includes(e.code)) { e.preventDefault(); moveMoleCursor('up'); }
+            else if (['ArrowDown', 'KeyS'].includes(e.code)) { e.preventDefault(); moveMoleCursor('down'); }
+            else if (['ArrowLeft', 'KeyA'].includes(e.code)) { e.preventDefault(); moveMoleCursor('left'); }
+            else if (['ArrowRight', 'KeyD'].includes(e.code)) { e.preventDefault(); moveMoleCursor('right'); }
+            else if (e.code === 'Space') { e.preventDefault(); whackMoleAt(moleCursor); }
+        }
+    });
+
+    function resetStep2All() {
+        buildStep2Pools();
+        document.getElementById('step2Feedback').textContent = '';
+        document.getElementById('nextToStep3').disabled = true;
+        resetMg1();
+        resetMg2();
+        resetMg3();
+        switchMgTab(1);
+    }
+
+    document.getElementById('retryCurrentMgBtn').addEventListener('click', () => {
+        if (currentMgTab === 1) resetMg1();
+        else if (currentMgTab === 2) resetMg2();
+        else if (currentMgTab === 3) resetMg3();
+    });
+    document.getElementById('retryStep2AllBtn').addEventListener('click', resetStep2All);
+    document.getElementById('nextToStep3').addEventListener('click', () => {
+        if (mg1Done && mg2Done && mg3Done) switchStep(3);
+    });
+
+    /* ================= 第三關：尋找活動之「最」（互動狙擊場） ================= */
+    const quizData = [
+        { id: 0, text: '哪個活動的「時間跨度最長」？', options: ['汽水廠開放日', '街頭同樂日', '汽水競飲大賽'], answer: '汽水競飲大賽' },
+        { id: 1, text: '哪個活動的「開支成本最低」？', options: ['汽水廠開放日', '街頭同樂日', '汽水競飲大賽'], answer: '汽水廠開放日' },
+        { id: 2, text: '哪個活動的「參與人數不受限制」（不限名額）？', options: ['汽水廠開放日', '街頭同樂日', '汽水競飲大賽'], answer: '街頭同樂日' },
+        { id: 3, text: '哪個活動的「公眾曝光率最高」？', options: ['汽水廠開放日', '街頭同樂日', '汽水競飲大賽'], answer: '街頭同樂日' },
+        { id: 4, text: '哪個活動的「成本最高」，預算負擔最重？', options: ['汽水廠開放日', '街頭同樂日', '汽水競飲大賽'], answer: '汽水競飲大賽' }
+    ];
+    let quizAnswered = {};
+    const quizContainer = document.getElementById('quizContainer');
+    let currentQuizIndex = 0;
+
+    function renderShootingArena() {
+        quizContainer.innerHTML = ''; 
+        if (currentQuizIndex >= quizData.length) return;
+        
+        const q = quizData[currentQuizIndex];
+        
+        const arena = document.createElement('div');
+        arena.className = 'shooting-arena';
+        
+        const statusBar = document.createElement('div');
+        statusBar.className = 'arena-status';
+        statusBar.innerHTML = `<span>🎯 狙擊任務鎖定中...</span> <span class="arena-progress">目標：${currentQuizIndex + 1} / ${quizData.length}</span>`;
+        arena.appendChild(statusBar);
+        
+        const qBox = document.createElement('div');
+        qBox.className = 'arena-question-box';
+        const qText = document.createElement('div');
+        qText.className = 'arena-question-text';
+        qText.textContent = q.text;
+        qBox.appendChild(qText);
+        arena.appendChild(qBox);
+        
+        const range = document.createElement('div');
+        range.className = 'targets-range';
+        
+        const shuffledOpts = shuffleArray(q.options);
+        
+        shuffledOpts.forEach(opt => {
+            const targetBtn = document.createElement('button');
+            targetBtn.className = 'shooting-target';
+            targetBtn.dataset.value = opt;
+            
+            const label = document.createElement('div');
+            label.className = 'target-label';
+            label.textContent = opt;
+            targetBtn.appendChild(label);
+            
+            targetBtn.addEventListener('click', function(e) {
+                if (quizAnswered[q.id] !== undefined) return; 
+                
+                playSound('tankFire');
+                const isCorrect = (opt === q.answer);
+                const allTargets = range.querySelectorAll('.shooting-target');
+                
+                if (isCorrect) {
+                    setTimeout(() => playSound('correct'), 100);
+                    addScore('step3', 2, e);
+                    this.classList.add('hit-correct');
+                    quizAnswered[q.id] = true;
+                    document.getElementById('step3Feedback').textContent = `🎯 完美命中（+2 分）！第 ${q.id+1} 題回答正確！`;
+                    document.getElementById('step3Feedback').style.color = '#2E7D32';
+                } else {
+                    setTimeout(() => playSound('wrong'), 100);
+                    addScore('step3', -1, e);
+                    this.classList.add('hit-wrong');
+                    quizAnswered[q.id] = false;
+                    document.getElementById('step3Feedback').textContent = `❌ 脫靶了（扣 1 分）！第 ${q.id+1} 題判定錯誤。正確目標是「${q.answer}」。`;
+                    document.getElementById('step3Feedback').style.color = '#C62828';
+                }
+                
+                allTargets.forEach(btn => {
+                    btn.disabled = true;
+                    if (!isCorrect && btn.dataset.value === q.answer) {
+                        btn.classList.add('reveal-correct');
+                    }
+                });
+                
+                const ctrlBox = arena.querySelector('.arena-controls');
+                
+                if (currentQuizIndex < quizData.length - 1) {
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'btn-primary';
+                    nextBtn.style.padding = '8px 24px';
+                    nextBtn.style.fontSize = '14px';
+                    nextBtn.textContent = '鎖定下一個目標 ➜';
+                    nextBtn.addEventListener('click', () => {
+                        currentQuizIndex++;
+                        renderShootingArena();
+                    });
+                    ctrlBox.appendChild(nextBtn);
+                } else {
+                    if (quizData.every(item => quizAnswered[item.id] === true)) {
+                        document.getElementById('step3Feedback').textContent = '🎉 完美清空靶場！請進入比較與總結！';
+                        document.getElementById('step3Feedback').style.color = '#2E7D32';
+                        document.getElementById('nextToStep4').disabled = false;
+                        showModal(3);
+                    } else {
+                        document.getElementById('step3Feedback').textContent = '⚠️ 任務結束，但有目標遺漏。可點擊下方重做本關刷高分，或直接進入總結！';
+                        document.getElementById('step3Feedback').style.color = '#C62828';
+                        document.getElementById('nextToStep4').disabled = false;
+                        
+                        const redoBtn = document.createElement('button');
+                        redoBtn.className = 'btn-secondary';
+                        redoBtn.style.padding = '8px 24px';
+                        redoBtn.style.fontSize = '14px';
+                        redoBtn.textContent = '🔄 立即重新挑戰第三關';
+                        redoBtn.addEventListener('click', resetStep3);
+                        ctrlBox.appendChild(redoBtn);
+                    }
+                }
+            });
+            
+            range.appendChild(targetBtn);
+        });
+        
+        arena.appendChild(range);
+        
+        const controls = document.createElement('div');
+        controls.className = 'arena-controls';
+        arena.appendChild(controls);
+        
+        quizContainer.appendChild(arena);
+    }
+
+    function resetStep3() {
+        quizAnswered = {};
+        currentQuizIndex = 0;
+        scores.step3 = 0;
+        updateAllScoreUI();
+        document.getElementById('step3Feedback').textContent = '';
+        document.getElementById('nextToStep4').disabled = true;
+        renderShootingArena();
+    }
+
+    document.getElementById('nextToStep4').addEventListener('click', () => { 
+        if (!document.getElementById('nextToStep4').disabled) switchStep(4); 
+    });
+    document.getElementById('redoStep3Btn').addEventListener('click', resetStep3);
+
+    /* ================= 關卡導航與全域重設綁定 ================= */
+    stepBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = parseInt(this.dataset.step);
+            if (target === 1) switchStep(1);
+            else if (target === 2 && !document.getElementById('nextToStep2').disabled) switchStep(2);
+            else if (target === 3 && !document.getElementById('nextToStep3').disabled) switchStep(3);
+            else if (target === 4 && !document.getElementById('nextToStep4').disabled) switchStep(4);
+        });
+    });
+
+    document.getElementById('btnBackTo1').addEventListener('click', () => switchStep(1));
+    document.getElementById('btnBackTo2').addEventListener('click', () => switchStep(2));
+    document.getElementById('btnBackTo3').addEventListener('click', () => switchStep(3));
+
+    document.getElementById('resetAllGameBtn').addEventListener('click', () => {
+        resetStep1();
+        resetStep2All();
+        resetStep3();
+        switchStep(1);
+    });
+
+    // 初始化所有關卡
+    renderStep1();
+    resetStep2All();
+    renderShootingArena();
+    updateAllScoreUI();
+    switchStep(1);
+    setTimeout(updateCanvasScalers, 50);
+})();
+</script>
+</body>
+</html>
