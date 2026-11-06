@@ -291,7 +291,7 @@
         .mg-panel { display: none; }
         .mg-panel.active { display: block; animation: fadeUp 0.3s ease; }
 
-        /* 跨裝置等比例畫布縮放外框 (確保手機與電腦座標100%一致且不超出畫面) */
+        /* 跨裝置等比例畫布縮放外框 */
         .responsive-canvas-viewport {
             width: 100%;
             position: relative;
@@ -1290,7 +1290,7 @@
         }
         .arena-controls { margin-top: 15px; min-height: 45px; display: flex; justify-content: center; align-items: center; }
 
-        /* ================= 第四關比較與總結 CSS ================= */
+        /* ================= 第四關比較與總結 CSS + 示範影片播放器 ================= */
         .compare-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
         .compare-card { flex: 1 1 280px; background: #fff; border-radius: 16px; border: 2px solid #E0E0E0; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06); transition: transform 0.3s ease; }
         .compare-card:hover { transform: translateY(-5px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
@@ -1303,6 +1303,78 @@
         .cc-section h4 { font-size: 15px; color: #424242; margin-bottom: 10px; border-bottom: 2px dashed #E0E0E0; padding-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .cc-section ul { padding-left: 22px; margin: 0; font-size: 14px; color: #555; line-height: 1.6; }
         .cc-section ul li { margin-bottom: 6px; }
+
+        /* 首輪發言技巧與示範影片按鈕與容器 */
+        .btn-video-demo {
+            background: linear-gradient(135deg, #8E24AA, #4A148C);
+            color: #FFD600;
+            border: 3px solid #FFD600;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(74, 20, 140, 0.35);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-video-demo:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 25px rgba(74, 20, 140, 0.5);
+            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+        }
+        .video-demo-wrapper {
+            display: none;
+            width: 100%;
+            max-width: 820px;
+            margin: 10px auto 5px;
+            background: #1A1A2E;
+            border: 4px solid #7E57C2;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.35);
+            animation: fadeUp 0.3s ease;
+        }
+        .video-demo-wrapper.active {
+            display: block;
+        }
+        .video-demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #FFD600;
+            font-weight: 800;
+            font-size: 17px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.25);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .video-close-btn {
+            background: #D32F2F;
+            color: #FFF;
+            border: 2px solid #FFCDD2;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .video-close-btn:hover {
+            background: #B71C1C;
+        }
+        .video-demo-wrapper video {
+            width: 100%;
+            max-height: 480px;
+            border-radius: 14px;
+            background: #000;
+            display: block;
+            outline: none;
+        }
 
         /* ================= 手機與平板響應式設計 (Media Queries) ================= */
         @media (max-width: 768px) {
@@ -1328,7 +1400,7 @@
             .pb-screen { padding: 8px; }
             .pb-question-banner { font-size: 15px; padding: 10px 12px; }
             .pb-control-deck { padding: 12px 10px; gap: 12px; }
-            .arcade-stick-base { display: none; } /* 手機版隱藏裝飾搖桿底座，騰出空間給方向鍵與大按鈕 */
+            .arcade-stick-base { display: none; }
             .pb-dpad-cross { grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 42px); }
             .joy-dir-btn { width: 48px; height: 42px; }
             .arcade-push-btn { width: 64px; height: 48px; font-size: 12px; }
@@ -1359,7 +1431,8 @@
             .shooting-target .target-label { font-size: 12px; padding: 4px 6px; }
 
             .action-bar { flex-direction: column; align-items: stretch; text-align: center; }
-            .btn-primary, .btn-secondary { width: 100%; }
+            .btn-primary, .btn-secondary, .btn-video-demo { width: 100%; font-size: 15px; padding: 12px 20px; }
+            .video-demo-wrapper { padding: 12px; }
         }
     </style>
 </head>
@@ -1611,7 +1684,7 @@
             </div>
         </div>
 
-        <!-- ==================== 第四關 ==================== -->
+        <!-- ==================== 第四關：比較與總結 ==================== -->
         <div class="step-panel" id="step4">
             <div class="top-nav-bar">
                 <button class="back-btn" id="btnBackTo3">🔙 返回第三關</button>
@@ -1709,10 +1782,28 @@
                 </div>
             </div>
 
-            <div class="action-bar" style="justify-content: center; flex-direction: column; gap: 15px;">
+            <div class="action-bar" style="justify-content: center; flex-direction: column; gap: 16px;">
                 <div class="score-box" id="finalSummaryScore" style="font-size: 17px; padding: 12px 24px; background:#C8E6C9; color:#1B5E20; border-color:#2E7D32;">
                     🎉 恭喜你完成所有分析！請根據上方圖表與組員討論，達成最終選擇共識。
                 </div>
+
+                <!-- 點擊觀看「首輪發言技巧與示範」按鈕 -->
+                <button class="btn-video-demo" id="watchVideoDemoBtn">
+                    🎬 點擊觀看「首輪發言技巧與示範」
+                </button>
+
+                <!-- 影片播放器容器 (m1.mp4) -->
+                <div class="video-demo-wrapper" id="videoDemoWrapper">
+                    <div class="video-demo-header">
+                        <span>🎥 首輪發言技巧與示範</span>
+                        <button class="video-close-btn" id="closeVideoDemoBtn">✕ 收起影片</button>
+                    </div>
+                    <video id="demoVideoPlayer" controls playsinline preload="metadata">
+                        <source src="m1.mp4" type="video/mp4">
+                        你的瀏覽器不支援 HTML5 影片播放。
+                    </video>
+                </div>
+
                 <button class="retry-btn" style="font-size:16px; padding:10px 26px; justify-content:center;" id="resetAllGameBtn">🔄 重新挑戰全關卡</button>
             </div>
         </div>
@@ -2012,6 +2103,8 @@
     const modalClose = document.getElementById('modalClose');
     const modalTitle = document.getElementById('modalTitle');
     const modalContent = document.getElementById('modalContent');
+    const demoVideoPlayer = document.getElementById('demoVideoPlayer');
+    const videoDemoWrapper = document.getElementById('videoDemoWrapper');
 
     function showModal(step) {
         playSound('fanfare');
@@ -2037,9 +2130,32 @@
             if (idx < step - 1) btn.classList.add('done');
             else btn.classList.remove('done');
         });
+        if (step !== 4 && demoVideoPlayer) {
+            demoVideoPlayer.pause();
+        }
         setTimeout(updateCanvasScalers, 30);
         syncActiveMinigameLoops();
     }
+
+    /* ================= 第四關「首輪發言技巧與示範」影片控制 ================= */
+    document.getElementById('watchVideoDemoBtn').addEventListener('click', () => {
+        const isShowing = videoDemoWrapper.classList.contains('active');
+        if (!isShowing) {
+            videoDemoWrapper.classList.add('active');
+            demoVideoPlayer.play().catch(() => {});
+            setTimeout(() => {
+                videoDemoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        } else {
+            demoVideoPlayer.pause();
+            videoDemoWrapper.classList.remove('active');
+        }
+    });
+
+    document.getElementById('closeVideoDemoBtn').addEventListener('click', () => {
+        demoVideoPlayer.pause();
+        videoDemoWrapper.classList.remove('active');
+    });
 
     /* ================= 第一關：確定討論核心 ================= */
     const judgeData = [
@@ -2529,7 +2645,6 @@
         }, 22);
     }
 
-    // 支援手機與電腦按住方向鍵連續移動 (統一使用 Pointer Events 避免手機雙重觸發)
     function bindHoldButton(btnEl, actionFn) {
         let holdTimer = null;
         const startHold = (e) => {
@@ -2698,7 +2813,6 @@
         el.style.left = bubbleObj.x + 'px';
         el.style.top = bubbleObj.y + 'px';
 
-        // 使用 pointerdown 讓手機點擊掉落中泡泡瞬間反應
         el.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -2908,7 +3022,6 @@
                 <div class="hole-oval"></div>
             `;
 
-            // 使用 pointerdown 讓手機點擊地鼠零延遲敲擊
             slot.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 moleCursor = i;
@@ -3322,6 +3435,8 @@
     document.getElementById('btnBackTo3').addEventListener('click', () => switchStep(3));
 
     document.getElementById('resetAllGameBtn').addEventListener('click', () => {
+        if (demoVideoPlayer) demoVideoPlayer.pause();
+        videoDemoWrapper.classList.remove('active');
         resetStep1();
         resetStep2All();
         resetStep3();
